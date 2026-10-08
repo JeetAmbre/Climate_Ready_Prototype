@@ -1,0 +1,21 @@
+.page-hero{background:#fff;border-bottom:1px solid var(--cr-border);padding:clamp(2.5rem,6vw,4.5rem) 0}
+.page-hero h1{font-size:clamp(2rem,4.4vw,3.1rem);letter-spacing:-.03em;margin-bottom:1rem}
+.prose{max-width:62ch;color:#334155}
+.inputs{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem}
+.inputs div{flex:1;min-width:140px;border:1px solid var(--cr-border);background:#fff;border-radius:8px;padding:.7rem 1rem;font-weight:500;text-align:center}
+.inputs span{color:var(--cr-text-2)}
+.pipeline{list-style:none;margin:0;padding:0 0 0 1.4rem;border-left:2px solid var(--cr-green)}
+.pipeline li{position:relative;padding:.55rem 0 .55rem .9rem;font-weight:500}
+.pipeline li::before{content:"";position:absolute;left:-1.4rem;top:50%;width:10px;height:10px;margin:-5px 0 0 -6px;border-radius:50%;background:var(--cr-green-2);border:2px solid #fff;box-sizing:content-box}
+.dim-box{background:#fff;border:1px solid var(--cr-border);border-top:4px solid;border-radius:10px;padding:1.4rem;height:100%}
+.dim-uhi{border-top-color:#EA580C}.dim-water{border-top-color:#1D4ED8}.dim-air{border-top-color:#7C3AED}
+.dim-box h3{font-size:1.1rem}.dim-box p{color:var(--cr-text-2);margin:0;font-size:.95rem}
+.accordion{--bs-accordion-active-bg:#DCFCE7;--bs-accordion-active-color:#166534;--bs-accordion-btn-focus-box-shadow:0 0 0 .2rem rgba(34,197,94,.25)}
+.classes{margin-top:1.25rem;display:grid;gap:.5rem;max-width:720px}
+.cls{display:grid;grid-template-columns:22px 110px 1fr;align-items:center;gap:.75rem;background:#fff;border:1px solid var(--cr-border);border-radius:8px;padding:.6rem .9rem}
+.cls span:last-child{color:var(--cr-text-2);font-size:.92rem}
+.sw{width:22px;height:22px;border-radius:4px}
+.sw1{background:#FFF3B0}.sw2{background:#FDCB6E}.sw3{background:#F59E0B}.sw4{background:#EA580C}.sw5{background:#B91C1C}
+@media(max-width:575.98px){.cls{grid-template-columns:22px 1fr}.cls span:last-child{grid-column:1/-1}}
+.callout{border-left:4px solid var(--cr-green);background:var(--cr-green-3);padding:1rem 1.25rem;border-radius:0 8px 8px 0;color:#14532d;max-width:62ch}
+.who{background:#fff;border:1px solid var(--cr-border);border-radius:8px;padding:1.1rem 1.25rem;font-weight:500;height:100%}

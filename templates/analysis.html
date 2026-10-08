@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Analysis{% endblock %}
+{% block body_class %}page-analysis{% endblock %}
+{% block head %}
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/analysis.css', v=build_id) }}" rel="stylesheet">
+{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+<script>window.CR_CFG = {{ cfg|tojson }};</script>
+
+<!-- 1. Location selection bar -->
+<section class="loc-bar">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="row g-2 align-items-end">
+      <div class="col-6 col-lg-auto">
+        <label class="form-label mb-1" for="levelSel">Area type</label>
+        <select class="form-select" id="levelSel"><option value="district">District</option><option value="subdistrict">Subdistrict</option></select>
+      </div>
+      <div class="col-12 col-lg position-relative">
+        <label class="form-label mb-1" for="locInput">Search location</label>
+        <input class="form-control" id="locInput" placeholder="Search location..." autocomplete="off">
+        <div class="list-group loc-results d-none" id="locResults"></div>
+      </div>
+      <div class="col-6 col-lg-auto"><button class="btn btn-outline-primary w-100" id="addBtn" type="button">+ Add</button></div>
+      <div class="col-6 col-lg-auto"><button class="btn btn-outline-secondary w-100" id="uploadBtn" type="button">Upload Custom Area</button>
+        <input type="file" id="uploadFile" accept=".zip" hidden></div>
+      <div class="col-6 col-lg-auto"><button class="btn btn-primary w-100" id="startBtn" type="button">Start Assessment</button></div>
+      <div class="col-12 d-flex flex-wrap align-items-center gap-2">
+        <span class="small text-muted-cr" id="chipLabel">No area selected</span><div class="chips" id="chips"></div>
+      </div>
+      <div class="col-12"><div class="alert alert-warning py-2 mb-0 d-none" id="locMsg" role="alert"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. States: idle / queued / processing / error -->
+<section class="state" id="stateEmpty"><div class="state-box"><h1>No assessment generated yet</h1>
+  <p>Select a district or up to five subdistricts (or upload your own area) and press Start Assessment.</p></div></section>
+<section class="state d-none" id="stateQueue" aria-live="polite"><div class="state-box">
+  <h1>Assessment Queue is Busy</h1>
+  <p>ClimateReady is currently processing other assessments. Your assessment will begin when processing capacity becomes available.</p>
+  <p class="fw-medium" id="queuePos"></p><div class="spinner-border text-success" role="status"></div></div></section>
+<section class="state d-none" id="stateLoading" aria-live="polite"><div class="state-box">
+  <h1>Preparing Climate Assessment</h1><ul class="steps" id="loadSteps"></ul>
+  <div class="progress" style="height:4px"><div class="progress-bar" id="loadBar" style="width:0"></div></div>
+  <p class="small text-muted-cr mt-3 mb-0"><span id="loadElapsed">Elapsed 0:00</span> · larger areas take longer</p></div></section>
+<section class="state d-none" id="stateError" role="alert"><div class="state-box">
+  <h1>We couldn't complete the assessment</h1><p id="errMsg">Please try again.</p>
+  <button class="btn btn-primary" id="retryBtn" type="button">Back to location selection</button></div></section>
+
+<!-- 3. Workspace: 25% panel / 75% map -->
+<section class="workspace d-none" id="workspace">
+  <div class="ws-head"><div><span class="fw-medium">Assessment:</span> <span class="text-muted-cr" id="wsAreas"></span></div>
+    <button class="btn btn-sm btn-outline-secondary d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#layersPanel">Layers</button></div>
+  <div class="alert alert-warning rounded-0 mb-0 py-2 small d-none" id="dataWarn" role="status"></div>
+  <div class="ws">
+    <aside class="panel offcanvas-lg offcanvas-start" id="layersPanel" tabindex="-1" aria-label="Control panel">
+      <div class="offcanvas-header d-lg-none"><h2 class="h6 mb-0">Layers</h2><button class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#layersPanel" aria-label="Close"></button></div>
+      <div class="offcanvas-body panel-body">
+        <h3 class="ph">Layers</h3>
+        <div class="sub">Risk Maps</div><div id="riskLayers"></div>
+        <div class="sub mt-3">Indicator layers</div><div id="indGroups"></div>
+        <h3 class="ph">Base Map</h3>
+        <label class="opt"><input type="radio" name="base" value="none"> No Base Map</label>
+        <label class="opt"><input type="radio" name="base" value="normal" checked> Normal Map</label>
+        <label class="opt"><input type="radio" name="base" value="satellite"> Satellite</label>
+        <div class="opacity"><label for="opacity" class="ph d-flex justify-content-between"><span>Layer Opacity</span><span id="opacityVal">100%</span></label>
+          <input type="range" class="form-range" id="opacity" min="10" max="100" value="100"></div>
+        <div class="panel-cta"><button class="btn btn-primary w-100 btn-lg" id="recBtn" type="button">Generate Recommendations</button></div>
+      </div>
+    </aside>
+    <div class="map-root">
+      <div id="map"></div>
+      <div class="legend" id="legend"></div>
+      <div class="map-notice d-none" id="mapNotice" role="status"></div>
+      <div class="map-busy d-none" id="mapBusy"><div class="spinner-border spinner-border-sm text-success"></div> Rendering layer… (first view can take up to a minute)</div>
+      <div class="map-actions" id="mapActions"><button class="btn btn-primary" id="recBtn2" type="button">Generate Recommendations</button></div>
+      <div class="map-modal d-none" id="recModal"><div class="map-modal-box">
+        <h2 class="h5">Recommendations Generated</h2>
+        <p>ClimateReady has identified priority areas and associated actions. Explore the pins on the map or scroll down to view detailed recommendations.</p>
+        <div class="d-flex gap-2 flex-wrap"><button class="btn btn-primary" id="mViewBtn">View Recommendations</button>
+          <button class="btn btn-outline-primary" id="mDlBtn">Download Report</button>
+          <button class="btn btn-link text-muted-cr" id="mCloseBtn">Close</button></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Statistics -->
+<section class="section d-none" id="statsSection"><div class="container-xl">
+  <h2 class="section-title">Assessment Overview</h2>
+  <div class="row g-3 mb-4" id="overview"></div>
+  <div id="hazardStats"></div>
+</div></section>
+
+<!-- 5. Recommendations -->
+<section class="section section-muted d-none" id="recsSection"><div class="container-xl">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h2 class="section-title mb-0">Recommended Actions</h2>
+    <button class="btn btn-primary" id="reportBtn" type="button">Download Climate Resilience Report</button></div>
+  <div class="row g-3" id="recList"></div>
+</div></section>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/map.js', v=build_id) }}"></script>
+<script src="{{ url_for('static', filename='js/recommendations.js', v=build_id) }}"></script>
+<script src="{{ url_for('static', filename='js/analysis.js', v=build_id) }}"></script>
+{% endblock %}

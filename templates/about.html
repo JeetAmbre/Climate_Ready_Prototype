@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+{% block head %}<link href="{{ url_for('static', filename='css/methodology.css', v=build_id) }}" rel="stylesheet">{% endblock %}
+{% block content %}
+<section class="page-hero"><div class="container-xl">
+  <h1>About ClimateReady</h1>
+  <p class="lead-cr">ClimateReady was developed as a prototype decision-support platform for understanding local climate vulnerability and connecting spatial risk assessment with practical local action.</p>
+</div></section>
+<section class="section"><div class="container-xl"><div class="row g-5">
+  <div class="col-md-6"><h2 class="section-title">The Idea</h2><p class="prose">Climate risks are experienced locally, but climate information is often presented at scales or formats that are difficult to translate into local decisions.</p></div>
+  <div class="col-md-6"><h2 class="section-title">Our Approach</h2><p class="prose">ClimateReady aims to bridge this gap by combining spatial risk information with an accessible interface and location-specific recommendations.</p></div>
+</div></div></section>
+<section class="section section-muted"><div class="container-xl">
+  <h2 class="section-title">Who Can Use It?</h2>
+  <div class="row g-3 mt-1">
+    {% for w in ['Local authorities','Urban planners','Researchers','NGOs','Community organisations','Environmental practitioners'] %}
+    <div class="col-6 col-lg-4"><div class="who">{{ w }}</div></div>{% endfor %}
+  </div>
+</div></section>
+{% endblock %}

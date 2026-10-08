@@ -1,0 +1,8 @@
+Flask>=3.0
+python-dotenv>=1.0
+earthengine-api>=0.1.390
+geopandas>=1.0
+shapely>=2.0
+reportlab>=4.0
+requests>=2.31
+gunicorn>=22.0

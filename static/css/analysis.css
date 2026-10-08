@@ -1,0 +1,120 @@
+.page-analysis{--navh:60px}
+.loc-bar{background:#fff;border-bottom:1px solid var(--cr-border);padding:.9rem 0}
+.loc-bar .form-label{font-size:.8rem;font-weight:500;color:var(--cr-text-2)}
+.loc-results{position:absolute;z-index:1050;left:12px;right:12px;max-height:260px;overflow-y:auto;box-shadow:0 6px 20px rgba(15,23,42,.15)}
+.loc-results button{text-align:left;min-height:44px}
+.loc-results small{color:var(--cr-text-2)}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{display:inline-flex;align-items:center;gap:.3rem;background:var(--cr-green-3);color:var(--cr-green);border-radius:999px;padding:.15rem .3rem .15rem .75rem;font-size:.88rem;font-weight:500}
+.chip button{border:0;background:none;color:inherit;width:28px;height:28px;border-radius:50%;font-size:1.1rem;line-height:1}
+.chip button:hover{background:rgba(22,101,52,.12)}
+/* states */
+.state{min-height:40vh;display:grid;place-items:center;padding:2rem 1rem;background:var(--cr-bg)}
+.state-box{text-align:center;max-width:460px;width:100%}
+.state-box h1{font-size:1.4rem;margin-bottom:.5rem}.state-box p{color:var(--cr-text-2)}
+.steps{list-style:none;padding:0;margin:1.25rem auto;text-align:left;display:inline-block}
+.steps li{padding:.3rem 0 .3rem 1.9rem;position:relative;color:#94A3B8}
+.steps li::before{content:"";position:absolute;left:3px;top:.6rem;width:14px;height:14px;border-radius:50%;border:2px solid #CBD5E1}
+.steps li.active{color:var(--cr-text)}.steps li.active::before{border-color:var(--cr-green-2);border-top-color:transparent;animation:spin .8s linear infinite}
+.steps li.done{color:var(--cr-text)}.steps li.done::before{background:var(--cr-green);border-color:var(--cr-green)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress{--bs-progress-bar-bg:#166534;background:var(--cr-border)}
+/* workspace */
+.workspace{background:var(--cr-bg)}
+.ws-head{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.55rem 1rem;border-bottom:1px solid var(--cr-border);background:#fff;font-size:.92rem}
+.ws{display:grid;grid-template-columns:1fr}
+.map-root{position:relative;height:70vh;min-height:420px;background:#E9EEE9}
+#map{position:absolute;inset:0;background:#E9EEE9}
+.panel{background:#fff}
+.panel-body{padding:1rem}
+/* Bootstrap's offcanvas-lg makes .offcanvas-body a horizontal flex row on desktop: force a vertical stack */
+.panel .offcanvas-body.panel-body{display:block!important;flex-direction:column;overflow-x:hidden;min-width:0}
+.panel,.map-root{min-width:0;min-height:0}
+.panel .opt{overflow-wrap:anywhere}
+html{scroll-behavior:smooth}
+@media(min-width:992px){
+  .ws{grid-template-columns:25% 75%;height:calc(100vh - var(--navh) - 150px);min-height:560px}
+  .map-root{height:auto}
+  .panel{overflow-y:auto;overflow-x:hidden;border-right:1px solid var(--cr-border);scrollbar-gutter:stable;overscroll-behavior:auto}
+  .panel-body{overflow:visible;padding-bottom:0}
+}
+@media(max-width:991.98px){.offcanvas-lg{width:min(380px,92vw)}}
+@media(max-width:767.98px){.map-root{height:62vh;min-height:360px}}
+.ph{font-size:.8rem;font-weight:600;color:var(--cr-text-2);text-transform:uppercase;letter-spacing:.04em;margin:1.2rem 0 .4rem}
+.ph:first-child{margin-top:0}
+.sub{font-size:.8rem;font-weight:500;color:var(--cr-text-2);margin:.4rem 0 .1rem}
+.opt{display:flex;align-items:center;gap:.6rem;padding:.4rem .25rem;min-height:40px;font-size:.92rem;cursor:pointer;border-radius:6px}
+.opt:hover{background:var(--cr-muted)}.opt input{accent-color:var(--cr-green);width:16px;height:16px;flex:none}
+.opt .sw{width:12px;height:12px;border-radius:3px;flex:none}
+.grp{display:flex;width:100%;justify-content:space-between;align-items:center;border:0;border-top:1px solid var(--cr-border);background:none;padding:.7rem 0;font-size:.92rem;font-weight:500;min-height:44px}
+.grp::after{content:"+";color:var(--cr-text-2)}.grp[aria-expanded=true]::after{content:"−"}
+.opacity{margin-top:1rem;border-top:1px solid var(--cr-border)}
+.panel-cta{position:sticky;bottom:0;background:#fff;padding:.8rem 0 1rem;margin-top:1rem;border-top:1px solid var(--cr-border)}
+/* map overlays */
+.legend{position:absolute;left:10px;bottom:10px;z-index:500;background:rgba(255,255,255,.96);border:1px solid var(--cr-border);border-radius:8px;padding:.55rem .75rem;font-size:.78rem;max-width:calc(100% - 20px)}
+.legend b{display:block;font-weight:600;margin-bottom:.3rem}
+.lg-item{display:flex;align-items:center;gap:.5rem;line-height:1.5}.lg-item i{width:16px;height:12px;border-radius:2px;border:1px solid rgba(0,0,0,.12)}
+.lg-item small{color:var(--cr-text-2)}
+.lg-ramp{display:flex;width:190px;max-width:60vw}.lg-ramp i{flex:1;height:10px}
+.lg-ends{display:flex;justify-content:space-between;color:var(--cr-text-2);font-size:.72rem;width:190px;max-width:60vw}
+.map-busy{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:600;background:#fff;border:1px solid var(--cr-border);border-radius:20px;padding:.25rem .8rem;font-size:.82rem}
+.map-actions{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:500;display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
+.map-actions .btn{box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.map-modal{position:absolute;inset:0;z-index:700;background:rgba(15,23,42,.35);display:grid;place-items:center;padding:1rem}
+.map-modal-box{background:#fff;border-radius:12px;padding:1.4rem;max-width:440px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.leaflet-container{font-family:inherit}
+.cr-pin{width:30px;height:30px;border-radius:50% 50% 50% 0;rotate:-45deg;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);display:grid;place-items:center;color:#fff;font-size:.75rem;font-weight:600}
+.cr-pin span{rotate:45deg}
+.cr-pin.on{box-shadow:0 0 0 5px rgba(34,197,94,.6);outline:2px solid #17201A}
+.pp h4{font-size:.95rem;margin:0 0 .3rem}.pp table{font-size:.8rem;width:100%}.pp td{padding:.1rem .3rem .1rem 0;vertical-align:top}.pp .k{color:var(--cr-text-2)}
+.lv{display:inline-block;border-radius:4px;padding:0 .4rem;color:#fff;font-size:.72rem;font-weight:500;background:#64748B}
+/* statistics */
+.ov-card{background:#fff;border:1px solid var(--cr-border);border-radius:10px;padding:1rem;height:100%}
+.ov-card span{display:block;font-size:.78rem;color:var(--cr-text-2)}.ov-card b{font-size:1.25rem;letter-spacing:-.02em;font-weight:600}
+.hz{background:#fff;border:1px solid var(--cr-border);border-top-width:4px;border-radius:10px;padding:1.1rem;margin-bottom:1rem}
+.hz h3{font-size:1.1rem}.hz h4{font-size:.85rem;color:var(--cr-text-2);font-weight:600;margin:.8rem 0 .4rem}
+.srow{display:grid;grid-template-columns:90px 1fr 120px;gap:.6rem;align-items:center;font-size:.86rem;padding:.2rem 0}
+.sbar{height:12px;background:var(--cr-muted);border-radius:3px;overflow:hidden}.sbar i{display:block;height:100%}
+.sval{text-align:right;font-variant-numeric:tabular-nums}.sval small{color:var(--cr-text-2);display:block;line-height:1.1}
+@media(max-width:575.98px){.srow{grid-template-columns:76px 1fr;}.sval{grid-column:1/-1;text-align:left;margin-top:-.2rem}}
+/* recommendation cards */
+.rec{background:#fff;border:1px solid var(--cr-border);border-left:4px solid var(--cr-green);border-radius:10px;padding:1rem;height:100%;transition:box-shadow .3s}
+.rec.flash{box-shadow:0 0 0 3px rgba(34,197,94,.5)}
+.rec .tag{font-size:.75rem;font-weight:600;letter-spacing:.04em;color:var(--cr-text-2)}
+.rec .pr{font-size:.78rem;font-weight:600;color:#B91C1C}
+.rec dl{margin:.6rem 0;display:grid;gap:.45rem}.rec dt{font-size:.75rem;font-weight:500;color:var(--cr-text-2)}.rec dd{margin:0;font-size:.9rem}
+.ind-chip{display:inline-block;background:var(--cr-muted);border-radius:4px;padding:0 .45rem;font-weight:500}
+
+/* map: page scrolls normally over it; wheel zoom needs Ctrl, touch pans need two fingers */
+.map-hint{position:absolute;inset:0;z-index:650;display:grid;place-items:center;background:rgba(15,23,42,.45);color:#fff;font-size:1rem;font-weight:500;text-align:center;padding:1rem;pointer-events:none;opacity:0;transition:opacity .25s}
+.map-hint.on{opacity:1}
+@media(max-width:991.98px){#map{touch-action:pan-y}}
+
+/* panel breathing room (overrides Bootstrap's offcanvas-lg padding:0 on desktop) */
+.panel .offcanvas-body.panel-body{padding:1.5rem 1.5rem 0!important}
+@media(max-width:991.98px){.panel .offcanvas-body.panel-body{padding:1.25rem 1.25rem 0!important}}
+.panel-cta{margin-left:-.25rem;margin-right:-.25rem;padding:.9rem .25rem 1.4rem;text-align:center}
+.panel-cta .btn{width:auto!important;min-width:210px;max-width:100%;min-height:44px;font-size:.95rem;padding:.5rem 1.4rem}
+/* unavailable data */
+.opt.nodata{color:#94A3B8}
+.opt.nodata small{color:#B45309;font-size:.72rem;margin-left:auto;white-space:nowrap}
+.map-notice{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:600;background:#fff;border:1px solid var(--cr-border);border-left:4px solid #B45309;border-radius:10px;padding:1rem 1.25rem;max-width:min(380px,86%);box-shadow:0 6px 20px rgba(15,23,42,.2);font-size:.92rem;text-align:left}
+.map-notice b{display:block;margin-bottom:.2rem}
+
+/* class maps: keep the 100 m cells crisp when zoomed in */
+img.crisp{image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* report button: fills with colour while the PDF is generated */
+@property --p{syntax:'<percentage>';inherits:false;initial-value:0%}
+.btn-progress,.btn-progress:disabled{--p:0%;transition:--p .8s ease;opacity:1!important;color:#14532d!important;border:1px solid #166534!important;
+  background:linear-gradient(90deg,#4ade80 var(--p),#f0fdf4 var(--p))!important}
+
+/* smoother scrolling on phones: no blur compositing on the sticky navbar */
+.page-analysis .cr-nav{-webkit-backdrop-filter:none;backdrop-filter:none;background:#fff}
+@media(max-width:991.98px){.map-modal{backdrop-filter:none}.legend{-webkit-backdrop-filter:none}}
+
+/* style.css switches ALL animation off when the device has "reduce motion" enabled, which froze the loading
+   circles. Loading indicators are essential feedback, so they keep turning. */
+.spinner-border,.spinner-border-sm{animation:spinner-border .75s linear infinite!important}
+.steps li.active::before{animation:spin .8s linear infinite!important}
+.btn-progress,.btn-progress:disabled{transition:--p .8s ease!important}

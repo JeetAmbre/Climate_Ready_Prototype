@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Methodology{% endblock %}
+{% block head %}<link href="{{ url_for('static', filename='css/methodology.css', v=build_id) }}" rel="stylesheet">{% endblock %}
+{% block content %}
+<section class="page-hero"><div class="container-xl">
+  <h1>How ClimateReady Works</h1>
+  <p class="lead-cr">ClimateReady uses a structured spatial assessment framework to understand environmental hazards, socio-economic vulnerability and local climate risk.</p>
+</div></section>
+
+<section class="section"><div class="container-xl">
+  <h2 class="section-title">Assessment Framework</h2>
+  <div class="row g-4 mt-1 align-items-start">
+    <div class="col-lg-5">
+      <div class="inputs"><div>Environmental Data</div><span>+</span><div>Socio-economic Data</div></div>
+      <ol class="pipeline">
+        <li>Indicator Preparation</li><li>Standardisation</li><li>Weighted Assessment</li><li>Vulnerability</li><li>Risk Assessment</li><li>Spatial Identification</li><li>Local Recommendations</li>
+      </ol>
+    </div>
+    <div class="col-lg-7 prose">
+      <p>Indicators are prepared for the selected area, standardised to a common scale and combined using weights to produce a vulnerability surface. Vulnerability is then combined with hazard and exposure information to give a risk classification for each part of the area.</p>
+      <p>The same process runs for urban heat, waterlogging and air pollution, so the three dimensions can be compared side by side. Areas in the higher classes are identified spatially and linked to the indicators that contribute most, which is what the recommendations are based on.</p>
+    </div>
+  </div>
+</div></section>
+
+<section class="section section-muted"><div class="container-xl">
+  <h2 class="section-title">Risk Dimensions</h2>
+  <div class="row g-3 g-lg-4 mt-1">
+    <div class="col-md-4"><div class="dim-box dim-uhi"><h3>Urban Heat Island</h3><p>Elevated urban temperatures driven by surface materials, built-up intensity and limited vegetation.</p></div></div>
+    <div class="col-md-4"><div class="dim-box dim-water"><h3>Waterlogging</h3><p>Water accumulation linked to terrain, rainfall, drainage and how permeable the ground is.</p></div></div>
+    <div class="col-md-4"><div class="dim-box dim-air"><h3>Air Pollution</h3><p>Exposure patterns shaped by traffic, built form, vegetation and local ventilation.</p></div></div>
+  </div>
+</div></section>
+
+<section class="section"><div class="container-xl">
+  <h2 class="section-title">Indicators</h2>
+  <div class="accordion mt-3" id="indAcc">
+    {% for key, title, items in [
+      ('uhi','Urban Heat Island',['LST – Land Surface Temperature','NDVI – Vegetation Index','NDBI – Built-up Intensity','LULC – Land use and Land cover','Albedo – Surface reflectivity']),
+      ('water','Waterlogging',['DEM – Elevation','Slope','Rainfall','Impervious Surface', 'Distance to Water Bodies','Distance to Drainage', 'Soil Type','NDVI – Vegetation Index','LULC – Land use and Land cover']),
+      ('air','Air Pollution',['Road density','LST – Land Surface Temperature','NDBI – Built-up Intensity','Wind speed','NDVI – Vegetation Index']),
+      ('socio','Socio-economic vulnerability',['Population density','Household crowding','LULC – Land use and Land cover', 'Children Population', 'Hospital Access', 'Residential Complex Intensity'])] %}
+    <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button {{ '' if loop.first else 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#ind-{{ key }}">{{ title }}</button></h3>
+      <div id="ind-{{ key }}" class="accordion-collapse collapse {{ 'show' if loop.first }}" data-bs-parent="#indAcc"><div class="accordion-body"><ul class="mb-0">{% for i in items %}<li>{{ i }}</li>{% endfor %}</ul></div></div></div>
+    {% endfor %}
+  </div>
+  <p class="small text-muted-cr mt-2">Indicator lists are placeholders and will be updated to match the final analytical implementation.</p>
+</div></section>
+
+<section class="section section-muted"><div class="container-xl">
+  <h2 class="section-title">Risk Classification</h2>
+  <p class="prose mt-2">Every part of the assessed area is placed in one of five classes. Areas that are Moderate, High or Very High are treated as priority areas.</p>
+  <div class="classes">
+    {% for n, d in [('Very Low','Little contribution from risk indicators.'),('Low','Limited contribution; monitor.'),('Moderate','Noticeable contribution; priority for attention.'),('High','Strong contribution; priority for action.'),('Very High','Highest contribution; first priority for action.')] %}
+    <div class="cls"><span class="sw sw{{ loop.index }}"></span><strong>{{ n }}</strong><span>{{ d }}</span></div>
+    {% endfor %}
+  </div>
+</div></section>
+
+<section class="section"><div class="container-xl"><div class="row g-4">
+  <div class="col-md-6"><h2 class="section-title">Validation &amp; Reliability</h2>
+    <p class="prose">The framework is evaluated through consistency checks, sensitivity assessment and available validation and cross-checking approaches.</p></div>
+  <div class="col-md-6"><h2 class="section-title">Limitations</h2>
+    <div class="callout"><p class="mb-0">Results are intended as a local decision-support assessment and should be interpreted alongside local knowledge, field observations and detailed planning studies.</p></div></div>
+</div></div></section>
+{% endblock %}

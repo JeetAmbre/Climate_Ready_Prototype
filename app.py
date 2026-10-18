@@ -15,6 +15,7 @@ from gee import common as C
 from gee import pipeline
 from gee.recommendations import build_recommendations
 from locations import LocationStore, build_aoi
+import mailer
 import report
 
 BUILD = "fast-v3"
@@ -87,7 +88,25 @@ def about(): return render_template("about.html")
 @app.route("/contact")
 def contact(): return render_template("contact.html")
 @app.post("/api/contact")
-def api_contact(): return jsonify(ok=True)
+def api_contact():
+    d = request.get_json(silent=True) or {}
+    name = (d.get("name") or "").strip()
+    email = (d.get("email") or "").strip()
+    msg = (d.get("message") or "").strip()
+    if not name or len(name) < 2:
+        return err("Please enter your name.")
+    if not email or "@" not in email or "." not in email:
+        return err("Please enter a valid email address.")
+    if not msg or len(msg) < 5:
+        return err("Please write a short message.")
+    client_ip = (
+        request.headers.get("CF-Connecting-IP")
+        or request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        or request.remote_addr
+        or ""
+    )
+    mailer.handle_contact_submission(d, client_ip=client_ip)
+    return jsonify(ok=True)
 
 
 # ---------------- location ----------------

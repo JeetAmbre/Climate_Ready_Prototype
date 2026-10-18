@@ -14,9 +14,10 @@
         <div class="col-md-6"><label class="form-label" for="cEmail">Email</label><input type="email" class="form-control" id="cEmail" required><div class="invalid-feedback">Enter a valid email address.</div></div>
         <div class="col-12"><label class="form-label" for="cOrg">Organisation</label><input class="form-control" id="cOrg"></div>
         <div class="col-12"><label class="form-label" for="cMsg">Message</label><textarea class="form-control" id="cMsg" rows="5" required></textarea><div class="invalid-feedback">Write a short message.</div></div>
-        <div class="col-12"><button class="btn btn-primary" type="submit">Send Message</button></div>
+        <div class="col-12"><button class="btn btn-primary" type="submit" id="cSubmit">Send Message</button></div>
       </div>
-      <div class="alert alert-success mt-3 d-none" id="contactOk" role="status">Thanks. Your message has been sent.</div>
+      <div class="alert alert-success mt-3 d-none" id="contactOk" role="status">Thanks. Your message has been received! We'll get back to you shortly.</div>
+      <div class="alert alert-danger mt-3 d-none" id="contactErr" role="alert"></div>
     </form>
   </div>
   <div class="col-lg-4 offset-lg-1">

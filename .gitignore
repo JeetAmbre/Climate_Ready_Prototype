@@ -21,6 +21,8 @@ service-account*.json
 # Generated runtime files
 reports/*.pdf
 !reports/.gitkeep
+data/contact_messages.jsonl
+*.jsonl
 
 # IDE & OS files
 .idea/

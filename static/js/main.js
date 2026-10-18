@@ -40,12 +40,63 @@
     go(0); restart();
   }
 
-  // ---- Contact form (front-end only; POST to /api/contact when backend exists) ----
+  // ---- Contact form submission ----
   const form = document.getElementById('contactForm');
-  if (form) form.addEventListener('submit', e => {
-    e.preventDefault();
-    let ok = true;
-    form.querySelectorAll('[required]').forEach(f => { const v = f.checkValidity() && f.value.trim(); f.classList.toggle('is-invalid', !v); if (!v) ok = false; });
-    if (ok) { document.getElementById('contactOk').classList.remove('d-none'); form.reset(); }
-  });
+  if (form) {
+    const okAlert = document.getElementById('contactOk');
+    const errAlert = document.getElementById('contactErr');
+    const submitBtn = document.getElementById('cSubmit') || form.querySelector('button[type="submit"]');
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      let ok = true;
+      form.querySelectorAll('[required]').forEach(f => {
+        const v = f.checkValidity() && f.value.trim();
+        f.classList.toggle('is-invalid', !v);
+        if (!v) ok = false;
+      });
+      if (!ok) return;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Sending...';
+      }
+      if (okAlert) okAlert.classList.add('d-none');
+      if (errAlert) errAlert.classList.add('d-none');
+
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('cName')?.value?.trim() || '',
+            email: document.getElementById('cEmail')?.value?.trim() || '',
+            org: document.getElementById('cOrg')?.value?.trim() || '',
+            message: document.getElementById('cMsg')?.value?.trim() || ''
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
+          if (okAlert) okAlert.classList.remove('d-none');
+          form.reset();
+          form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        } else {
+          if (errAlert) {
+            errAlert.textContent = data.error || 'Unable to send message right now. Please try again.';
+            errAlert.classList.remove('d-none');
+          }
+        }
+      } catch (err) {
+        if (errAlert) {
+          errAlert.textContent = 'Network error. Please try again or email us directly.';
+          errAlert.classList.remove('d-none');
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Message';
+        }
+      }
+    });
+  }
 })();

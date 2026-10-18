@@ -77,3 +77,12 @@ MAX_PINS_PER_HAZARD = 10        # safety cap only, not a target
 # ---------------- Report ----------------
 REPORT_DIR = BASE_DIR / "reports"
 LOGO_CANDIDATES = ["ClimateReady_logo.png", "ClimateReadyLogo.png", "logo.png", "navbarLogo.png"]
+
+# ---------------- Contact & Email ----------------
+MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+MAIL_PORT = _num("MAIL_PORT", 587)
+MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "true").lower() in ("true", "1", "t")
+MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
+MAIL_TO = os.getenv("MAIL_TO", "jeetambre090@gmail.com")
+

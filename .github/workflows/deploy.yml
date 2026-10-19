@@ -17,9 +17,10 @@ jobs:
           USER: ${{ secrets.VPS_USER }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 22 "${USER}@${HOST}" << 'EOF'
+          ssh-keygen -l -f ~/.ssh/deploy_key
+          ssh -v -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 22 "${USER}@${HOST}" << 'EOF'
             set -e
             cd /var/www/climateready
             git pull origin main

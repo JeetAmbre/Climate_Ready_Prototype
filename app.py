@@ -109,6 +109,40 @@ def api_contact():
     return jsonify(ok=True)
 
 
+# ---------------- auto-deploy webhook ----------------
+@app.post("/api/deploy-webhook")
+def deploy_webhook():
+    secret = getattr(config, "DEPLOY_SECRET", "cr-deploy-78f92a10b4c6e83d91f2")
+    auth = request.headers.get("Authorization", "").strip()
+    expected = f"Bearer {secret}"
+    if not auth or auth != expected:
+        return jsonify(error="Unauthorized"), 401
+
+    def _execute_deploy():
+        import subprocess
+        import logging
+        log = logging.getLogger("climateready.deploy")
+        log.info("[DEPLOY] Webhook authenticated. Pulling latest commit...")
+        time.sleep(1)
+        cmd = (
+            "set -e; "
+            "cd /var/www/climateready; "
+            "GIT_TERMINAL_PROMPT=0 git pull origin main; "
+            "source venv/bin/activate; "
+            "pip install -r requirements.txt; "
+            "systemctl restart climateready"
+        )
+        res = subprocess.run(["/bin/bash", "-c", cmd], capture_output=True, text=True)
+        if res.returncode == 0:
+            log.info("[DEPLOY] Auto-deploy succeeded!")
+        else:
+            log.error(f"[DEPLOY] Auto-deploy failed (code {res.returncode}): {res.stderr}")
+
+    threading.Thread(target=_execute_deploy, daemon=True).start()
+    return jsonify(ok=True, message="Auto-deploy initiated"), 200
+
+
+
 # ---------------- location ----------------
 @app.post("/api/location/search")
 def location_search():

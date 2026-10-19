@@ -86,3 +86,7 @@ MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
 MAIL_TO = os.getenv("MAIL_TO", "jeetambre090@gmail.com")
 
+# ---------------- Auto Deploy Webhook ----------------
+DEPLOY_SECRET = os.getenv("DEPLOY_SECRET", "cr-deploy-78f92a10b4c6e83d91f2")
+
+

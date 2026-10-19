@@ -10,20 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to VPS via Native OpenSSH
+      - name: Trigger Auto Deploy on VPS
         env:
-          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          DEPLOY_SECRET: ${{ secrets.DEPLOY_SECRET || 'cr-deploy-78f92a10b4c6e83d91f2' }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keygen -l -f ~/.ssh/deploy_key
-          ssh -v -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -p 22 root@147.135.130.114 << 'EOF'
-            set -e
-            cd /var/www/climateready
-            git pull origin main
-            source venv/bin/activate
-            pip install -r requirements.txt
-            systemctl restart climateready
-            echo "=== AUTO DEPLOY SUCCESSFUL ==="
-          EOF
+          echo "Sending deployment trigger to https://climateready.in/api/deploy-webhook ..."
+          response=$(curl -s -w "\n%{http_code}" -X POST https://climateready.in/api/deploy-webhook \
+            -H "Authorization: Bearer $DEPLOY_SECRET")
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n -1)
+          echo "Response: $body"
+          echo "HTTP Status: $http_code"
+          if [ "$http_code" -ne 200 ]; then
+            echo "Auto-deploy trigger failed with status $http_code"
+            exit 1
+          fi
+          echo "=== AUTO DEPLOY TRIGGERED SUCCESSFULLY ==="
+

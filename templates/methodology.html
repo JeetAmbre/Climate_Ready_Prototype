@@ -1,66 +1,851 @@
 {% extends "base.html" %}
-{% block title %}Methodology{% endblock %}
-{% block head %}<link href="{{ url_for('static', filename='css/methodology.css', v=build_id) }}" rel="stylesheet">{% endblock %}
+{% block title %}Explore & Learn{% endblock %}
+{% block head %}
+<link href="{{ url_for('static', filename='css/methodology.css', v=build_id) }}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<section class="page-hero"><div class="container-xl">
-  <h1>How ClimateReady Works</h1>
-  <p class="lead-cr">ClimateReady uses a structured spatial assessment framework to understand environmental hazards, socio-economic vulnerability and local climate risk.</p>
-</div></section>
+<!-- Page Hero -->
+<section class="page-hero">
+  <div class="container-xl">
+    <div class="section-badge">Platform Guide &amp; Knowledge Base</div>
+    <h1>Explore &amp; Learn</h1>
+    <p class="lead-cr mb-0">Understand how ClimateReady works, explore climate risk frameworks, examine spatial indicators, and turn environmental data into informed local action.</p>
+  </div>
+</section>
 
-<section class="section"><div class="container-xl">
-  <h2 class="section-title">Assessment Framework</h2>
-  <div class="row g-4 mt-1 align-items-start">
-    <div class="col-lg-5">
-      <div class="inputs"><div>Environmental Data</div><span>+</span><div>Socio-economic Data</div></div>
-      <ol class="pipeline">
-        <li>Indicator Preparation</li><li>Standardisation</li><li>Weighted Assessment</li><li>Vulnerability</li><li>Risk Assessment</li><li>Spatial Identification</li><li>Local Recommendations</li>
-      </ol>
+<!-- Quick Navigation Subnav -->
+<nav class="explore-subnav" aria-label="Page Sections">
+  <div class="container-xl">
+    <div class="explore-subnav-inner">
+      <a class="subnav-pill" href="#how-to-use"><span class="num">01</span> How to Use</a>
+      <a class="subnav-pill" href="#understanding-risk"><span class="num">02</span> Climate Risk Framework</a>
+      <a class="subnav-pill" href="#how-it-works"><span class="num">03</span> How It Works</a>
+      <a class="subnav-pill" href="#assessment-modules"><span class="num">04</span> Risk Modules &amp; Indicators</a>
+      <a class="subnav-pill" href="#vulnerability-map"><span class="num">05</span> Map Classes</a>
+      <a class="subnav-pill" href="#recommendations"><span class="num">06</span> Action Levels</a>
+      <a class="subnav-pill" href="#data-validation"><span class="num">07</span> Data &amp; Reliability</a>
+      <a class="subnav-pill" href="#limitations"><span class="num">08</span> Limitations</a>
     </div>
-    <div class="col-lg-7 prose">
-      <p>Indicators are prepared for the selected area, standardised to a common scale and combined using weights to produce a vulnerability surface. Vulnerability is then combined with hazard and exposure information to give a risk classification for each part of the area.</p>
-      <p>The same process runs for urban heat, waterlogging and air pollution, so the three dimensions can be compared side by side. Areas in the higher classes are identified spatially and linked to the indicators that contribute most, which is what the recommendations are based on.</p>
+  </div>
+</nav>
+
+<!-- 1. How to Use ClimateReady (Flowchart) -->
+<section class="section" id="how-to-use">
+  <div class="container-xl">
+    <div class="row align-items-end mb-4">
+      <div class="col-lg-8">
+        <div class="section-badge">Interactive Guide</div>
+        <h2 class="section-title">1. How to Use ClimateReady</h2>
+        <p class="lead-cr mb-0">From selecting a location to identifying possible solutions — follow these six sequential steps to conduct your local risk assessment.</p>
+      </div>
+    </div>
+
+    <!-- Usage Flowchart -->
+    <div class="usage-flowchart">
+      <div class="flow-grid-row">
+        <!-- Step 1 -->
+        <div class="flow-step-card">
+          <div class="flow-step-header">
+            <span class="step-num-pill">STEP 01</span>
+            <div class="flow-step-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+            </div>
+          </div>
+          <h3 class="flow-step-title">Select your location</h3>
+          <p class="flow-step-desc">Choose a supported geographic area to begin your assessment. ClimateReady uses the selected region as the boundary for its spatial analysis.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flow-step-card">
+          <div class="flow-step-header">
+            <span class="step-num-pill">STEP 02</span>
+            <div class="flow-step-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/></svg>
+            </div>
+          </div>
+          <h3 class="flow-step-title">Choose an environmental risk</h3>
+          <p class="flow-step-desc">Explore one of the three tailored assessment modules:</p>
+          <div class="flow-step-subitems">
+            <div class="flow-step-subitem"><strong>Urban Heat Island:</strong> Explore how the risk of urban heat varies across the region.</div>
+            <div class="flow-step-subitem"><strong>Waterlogging:</strong> Identify areas with conditions linked to greater water accumulation.</div>
+            <div class="flow-step-subitem"><strong>Air Pollution Exposure:</strong> Explore areas with built-up traits linked to pollution susceptibility.</div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flow-step-card">
+          <div class="flow-step-header">
+            <span class="step-num-pill">STEP 03</span>
+            <div class="flow-step-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+            </div>
+          </div>
+          <h3 class="flow-step-title">Explore the risk map</h3>
+          <p class="flow-step-desc">View the interactive map to identify areas classified as Very Low, Low, Moderate, High or Very High risk. Zoom in to compare how risk varies across different parts of your selected region.</p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="flow-step-card">
+          <div class="flow-step-header">
+            <span class="step-num-pill">STEP 04</span>
+            <div class="flow-step-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </div>
+          </div>
+          <h3 class="flow-step-title">Understand what drives the risk</h3>
+          <p class="flow-step-desc">Explore the underlying indicators to understand which environmental conditions (such as low vegetation, steep slopes, or high impervious cover) may be contributing to the mapped risk patterns.</p>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="flow-step-card">
+          <div class="flow-step-header">
+            <span class="step-num-pill">STEP 05</span>
+            <div class="flow-step-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+          </div>
+          <h3 class="flow-step-title">Explore recommended actions</h3>
+          <p class="flow-step-desc">Review tailored recommendations associated with the identified risk patterns to discover possible actions for individuals, communities and local authorities.</p>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="flow-step-card">
+          <div class="flow-step-header">
+            <span class="step-num-pill">STEP 06</span>
+            <div class="flow-step-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+          </div>
+          <h3 class="flow-step-title">Generate your Climate Resilience Report</h3>
+          <p class="flow-step-desc">Generate a clean, printable PDF report bringing together the assessment results, maps and recommendations in an easily shareable format for decision-makers.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-info mt-4">
+      <strong>Note:</strong> The available indicators, geographic detail and recommendations depend on the selected module and the data available for the region.
     </div>
   </div>
-</div></section>
+</section>
 
-<section class="section section-muted"><div class="container-xl">
-  <h2 class="section-title">Risk Dimensions</h2>
-  <div class="row g-3 g-lg-4 mt-1">
-    <div class="col-md-4"><div class="dim-box dim-uhi"><h3>Urban Heat Island</h3><p>Elevated urban temperatures driven by surface materials, built-up intensity and limited vegetation.</p></div></div>
-    <div class="col-md-4"><div class="dim-box dim-water"><h3>Waterlogging</h3><p>Water accumulation linked to terrain, rainfall, drainage and how permeable the ground is.</p></div></div>
-    <div class="col-md-4"><div class="dim-box dim-air"><h3>Air Pollution</h3><p>Exposure patterns shaped by traffic, built form, vegetation and local ventilation.</p></div></div>
+<!-- 2. Understanding Climate Risk -->
+<section class="section section-muted" id="understanding-risk">
+  <div class="container-xl">
+    <div class="section-badge">Conceptual Foundation</div>
+    <h2 class="section-title">2. Understanding Climate Risk</h2>
+    <p class="lead-cr mb-4">ClimateReady's approach draws on the conceptual framework used by the Intergovernmental Panel on Climate Change (IPCC) to understand climate-related risk.</p>
+
+    <div class="ipcc-triad-banner">
+      <span class="triad-chip hazard">Hazard</span>
+      <span class="triad-symbol">&times;</span>
+      <span class="triad-chip exposure">Exposure</span>
+      <span class="triad-symbol">&times;</span>
+      <span class="triad-chip vulnerability">Vulnerability</span>
+      <span class="triad-symbol">=</span>
+      <span class="triad-chip risk">Climate Risk</span>
+    </div>
+
+    <p class="prose mb-4">In the IPCC's Sixth Assessment Report framework, climate risk arises from the interaction of <strong>hazard</strong>, <strong>exposure</strong> and <strong>vulnerability</strong>. These concepts help explain why the same environmental event can have different consequences in different places.</p>
+
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="concept-card hazard">
+          <h3 class="concept-card-title text-danger">Hazard</h3>
+          <div class="concept-card-subtitle">What could cause harm?</div>
+          <div class="concept-card-body">
+            A hazard is a potentially damaging event or trend, or a physical impact associated with climate change.
+          </div>
+          <div class="concept-card-example">
+            <strong>Examples:</strong> Extreme heat waves and intense rainfall. In air pollution, harmful pollutant concentrations act as an environmental hazard.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="concept-card exposure">
+          <h3 class="concept-card-title text-primary">Exposure</h3>
+          <div class="concept-card-subtitle">Who or what is in harm's way?</div>
+          <div class="concept-card-body">
+            Exposure refers to the presence of people, livelihoods, species, ecosystems, infrastructure or other assets in places that could be adversely affected.
+          </div>
+          <div class="concept-card-example">
+            <strong>Examples:</strong> A densely populated neighbourhood exposed to extreme heat, or a major transport corridor exposed to water accumulation.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="concept-card vulnerability">
+          <h3 class="concept-card-title" style="color:#7C3AED;">Vulnerability</h3>
+          <div class="concept-card-subtitle">How susceptible are they to harm?</div>
+          <div class="concept-card-body">
+            Vulnerability is the propensity or predisposition to be adversely affected, including susceptibility to harm and capacity to cope or adapt.
+          </div>
+          <div class="concept-card-example">
+            <strong>Examples:</strong> Low vegetation, extensive paved surfaces, low-lying terrain, or limited drainage capacity.
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="concept-card risk">
+          <h3 class="concept-card-title text-success">Risk</h3>
+          <div class="concept-card-subtitle">What is the potential for harm?</div>
+          <div class="concept-card-body">
+            Risk results from the interaction of hazard, exposure and vulnerability. The likelihood and severity of harm depend on how these interact.
+          </div>
+          <div class="concept-card-example">
+            <strong>Context:</strong> Two neighbourhoods with the same hot day experience different consequences if one has trees and shade while the other is paved.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How ClimateReady Applies These Concepts -->
+    <div class="row g-4 mt-2">
+      <div class="col-lg-7">
+        <div class="p-4 bg-white border rounded-3 h-100">
+          <h4 class="h5 mb-2">How does ClimateReady apply these concepts?</h4>
+          <p class="prose mb-0">ClimateReady uses spatial environmental indicators to assess and map relative risk patterns across a selected region for urban heat, waterlogging and air-pollution exposure. The indicators help characterise the environmental conditions associated with risk. The resulting maps allow users to compare locations, investigate the factors behind their scores and explore possible actions.</p>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="callout callout-amber h-100">
+          <h4 class="h6 mb-2">An Important Distinction</h4>
+          <p class="small mb-2">The IPCC framework provides the conceptual foundation for understanding risk. A map generated from a selected set of indicators is an operational assessment of risk under ClimateReady's methodology; it is not automatically a complete quantification of all hazard, exposure and vulnerability components described by the IPCC. The scope of each map depends on the data and calculations actually used in that module.</p>
+          <div class="small pt-2 border-top border-warning-subtle">
+            <strong>Reference:</strong> IPCC, Sixth Assessment Report (AR6), Working Group II, Chapter 1 — Point of Departure and Key Concepts. 
+            <a href="https://www.ipcc.ch/report/ar6/wg2/chapter/chapter-1/" target="_blank" rel="noopener noreferrer" class="fw-semibold">Read the chapter &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</div></section>
+</section>
 
-<section class="section"><div class="container-xl">
-  <h2 class="section-title">Indicators</h2>
-  <div class="accordion mt-3" id="indAcc">
-    {% for key, title, items in [
-      ('uhi','Urban Heat Island',['LST – Land Surface Temperature','NDVI – Vegetation Index','NDBI – Built-up Intensity','LULC – Land use and Land cover','Albedo – Surface reflectivity']),
-      ('water','Waterlogging',['DEM – Elevation','Slope','Rainfall','Impervious Surface', 'Distance to Water Bodies','Distance to Drainage', 'Soil Type','NDVI – Vegetation Index','LULC – Land use and Land cover']),
-      ('air','Air Pollution',['Road density','LST – Land Surface Temperature','NDBI – Built-up Intensity','Wind speed','NDVI – Vegetation Index']),
-      ('socio','Socio-economic vulnerability',['Population density','Household crowding','LULC – Land use and Land cover', 'Children Population', 'Hospital Access', 'Residential Complex Intensity'])] %}
-    <div class="accordion-item"><h3 class="accordion-header"><button class="accordion-button {{ '' if loop.first else 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#ind-{{ key }}">{{ title }}</button></h3>
-      <div id="ind-{{ key }}" class="accordion-collapse collapse {{ 'show' if loop.first }}" data-bs-parent="#indAcc"><div class="accordion-body"><ul class="mb-0">{% for i in items %}<li>{{ i }}</li>{% endfor %}</ul></div></div></div>
-    {% endfor %}
+<!-- 3. How ClimateReady Works (Assessment Workflow Flowchart) -->
+<section class="section" id="how-it-works">
+  <div class="container-xl">
+    <div class="section-badge">Methodological Engine</div>
+    <h2 class="section-title">3. How ClimateReady Works</h2>
+    <p class="lead-cr">ClimateReady transforms environmental and geographic datasets into spatial risk assessments to help users identify priority areas and explore possible actions.</p>
+
+    <!-- Assessment Workflow Flowchart -->
+    <div class="workflow-pipeline-container">
+      <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <h3 class="h6 text-uppercase fw-bold text-muted-cr mb-0 tracking-wider">The Assessment Workflow Pipeline</h3>
+        <span class="badge bg-light text-dark border">Automated Earth Engine Pipeline</span>
+      </div>
+
+      <div class="workflow-track">
+        <div class="workflow-node">
+          <div class="workflow-node-index">1</div>
+          <div class="workflow-node-title">Environmental Data</div>
+          <div class="workflow-node-sub">Raw satellite &amp; geographic inputs</div>
+        </div>
+
+        <div class="workflow-node">
+          <div class="workflow-node-index">2</div>
+          <div class="workflow-node-title">Indicator Preparation</div>
+          <div class="workflow-node-sub">Clipping, resampling, index derivation</div>
+        </div>
+
+        <div class="workflow-node">
+          <div class="workflow-node-index">3</div>
+          <div class="workflow-node-title">Standardisation</div>
+          <div class="workflow-node-sub">Scaling to uniform numeric range</div>
+        </div>
+
+        <div class="workflow-node">
+          <div class="workflow-node-index">4</div>
+          <div class="workflow-node-title">Weighted Assessment</div>
+          <div class="workflow-node-sub">Multi-criteria weighted combination</div>
+        </div>
+
+        <div class="workflow-node">
+          <div class="workflow-node-index">5</div>
+          <div class="workflow-node-title">Risk Classification</div>
+          <div class="workflow-node-sub">Grouping into 5 distinct classes</div>
+        </div>
+
+        <div class="workflow-node">
+          <div class="workflow-node-index">6</div>
+          <div class="workflow-node-title">Spatial Mapping</div>
+          <div class="workflow-node-sub">Interactive tiles &amp; visual overlay</div>
+        </div>
+
+        <div class="workflow-node">
+          <div class="workflow-node-index">7</div>
+          <div class="workflow-node-title">Recommendations</div>
+          <div class="workflow-node-sub">Multi-tier local action strategies</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-3">
+      <div class="col-lg-7">
+        <p class="prose mb-0">Data relevant to each risk module are processed and combined according to the implemented assessment methodology. The resulting maps show how risk scores vary across the selected region, while the underlying indicators help users understand the environmental conditions associated with those patterns.</p>
+      </div>
+      <div class="col-lg-5">
+        <div class="callout callout-info">
+          <p class="mb-0"><strong>Designed for accessibility:</strong> ClimateReady makes spatial climate intelligence accessible to urban planners, local authorities, and community leaders without requiring specialist knowledge of GIS or climate science.</p>
+        </div>
+      </div>
+    </div>
   </div>
-  <p class="small text-muted-cr mt-2">Indicator lists are placeholders and will be updated to match the final analytical implementation.</p>
-</div></section>
+</section>
 
-<section class="section section-muted"><div class="container-xl">
-  <h2 class="section-title">Risk Classification</h2>
-  <p class="prose mt-2">Every part of the assessed area is placed in one of five classes. Areas that are Moderate, High or Very High are treated as priority areas.</p>
-  <div class="classes">
-    {% for n, d in [('Very Low','Little contribution from risk indicators.'),('Low','Limited contribution; monitor.'),('Moderate','Noticeable contribution; priority for attention.'),('High','Strong contribution; priority for action.'),('Very High','Highest contribution; first priority for action.')] %}
-    <div class="cls"><span class="sw sw{{ loop.index }}"></span><strong>{{ n }}</strong><span>{{ d }}</span></div>
-    {% endfor %}
+<!-- 4. Explore the Three Assessment Modules (Dropdowns / None Opened by Default) -->
+<section class="section section-muted" id="assessment-modules">
+  <div class="container-xl">
+    <div class="section-badge">Risk Modules &amp; Indicators</div>
+    <h2 class="section-title">4. Explore the Three Assessment Modules</h2>
+    <p class="lead-cr mb-4">Click any of the three assessment modules below to expand its full assessment scope, complete indicator breakdowns, vulnerability score explanations, and actionable interventions. (All closed by default).</p>
+
+    <!-- Accordion Wrapper (none opened by default) -->
+    <div class="module-accordion-wrapper" id="modulesAccordion">
+
+      <!-- MODULE A: URBAN HEAT ISLAND -->
+      <div class="module-acc-item">
+        <div class="module-acc-header" id="headingUHI">
+          <button class="module-acc-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUHI" aria-expanded="false" aria-controls="collapseUHI">
+            <div class="module-acc-meta">
+              <div class="module-acc-badge badge-uhi">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/></svg>
+              </div>
+              <div class="module-acc-title-group">
+                <h3>A. Urban Heat Island (UHI) Vulnerability</h3>
+                <p>Surface heating, built materials, vegetation cooling and thermal radiation</p>
+              </div>
+            </div>
+            <div class="d-flex align-items-center">
+              <span class="module-acc-indicator-count">5 Indicators</span>
+              <svg class="module-acc-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </button>
+        </div>
+
+        <div id="collapseUHI" class="accordion-collapse collapse" aria-labelledby="headingUHI" data-bs-parent="#modulesAccordion">
+          <div class="module-acc-body">
+            <!-- What are we assessing? -->
+            <div class="mb-4">
+              <h4 class="h6 text-uppercase fw-bold text-muted-cr">What are we assessing?</h4>
+              <p class="prose">Urban Heat Island (UHI) describes the tendency for urban areas to be warmer than surrounding less-developed areas, often because of built surfaces, reduced vegetation and changes in how heat is absorbed, stored and released.</p>
+              <p class="prose mb-0">ClimateReady examines environmental characteristics associated with urban surface heating to identify areas that may be more susceptible to heat-related conditions.</p>
+            </div>
+
+            <!-- Indicators Used -->
+            <h4 class="h6 text-uppercase fw-bold text-muted-cr mb-2">Indicators Used</h4>
+            <div class="indicators-subgrid">
+              <!-- LST -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Land Surface Temperature</h4>
+                  <span class="indicator-tag">LST</span>
+                </div>
+                <p>LST estimates the temperature of the land surface as observed by a satellite. It helps identify areas where the ground, roofs and other visible surfaces are relatively hot.</p>
+                <div class="ind-caveat">LST is not the same as the air temperature reported in a weather forecast, nor does it directly measure a person's heat exposure.</div>
+              </div>
+
+              <!-- NDVI -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Vegetation Index</h4>
+                  <span class="indicator-tag">NDVI</span>
+                </div>
+                <p>NDVI is a satellite-derived index used to estimate the presence and relative greenness of vegetation. Areas with healthy vegetation benefit from shade and evaporative cooling.</p>
+                <div class="ind-caveat">Lower vegetation levels can indicate reduced natural cooling, although NDVI alone does not describe every aspect of vegetation quality or accessibility.</div>
+              </div>
+
+              <!-- NDBI -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Built-up Index</h4>
+                  <span class="indicator-tag">NDBI</span>
+                </div>
+                <p>NDBI is a satellite-derived index used to help distinguish built-up surfaces from other land-cover types. Higher built-up signals indicate extensive construction and impervious surfaces influencing heat storage.</p>
+                <div class="ind-caveat">NDBI is an indicator, not a direct measurement of building density or heat.</div>
+              </div>
+
+              <!-- LULC -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Land Use &amp; Land Cover</h4>
+                  <span class="indicator-tag">LULC</span>
+                </div>
+                <p>LULC describes the types of surfaces present in an area, such as built-up land, vegetation, water and bare ground. Different surface types absorb, reflect and store heat differently.</p>
+                <div class="ind-caveat">Helps characterise the spatial composition of the urban landscape.</div>
+              </div>
+
+              <!-- Albedo -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Albedo</h4>
+                  <span class="indicator-tag">Reflectivity</span>
+                </div>
+                <p>Albedo describes the proportion of incoming solar radiation reflected by a surface. A surface with higher albedo reflects more incoming sunlight, while lower-albedo surfaces absorb more.</p>
+                <div class="ind-caveat">Influence on surface heating also depends on thermal storage, shading and moisture.</div>
+              </div>
+            </div>
+
+            <!-- Score Meaning & Actions -->
+            <div class="row g-4 pt-3 border-top">
+              <div class="col-md-6">
+                <h4 class="h6 text-uppercase fw-bold text-muted-cr">What might a higher vulnerability score indicate?</h4>
+                <p class="small text-muted-cr mb-0">Depending on the implemented indicators and their weights, a higher score may be associated with relatively high surface temperatures, extensive built-up surfaces or limited vegetation.</p>
+              </div>
+              <div class="col-md-6">
+                <h4 class="h6 text-uppercase fw-bold text-muted-cr">What actions might help?</h4>
+                <p class="small text-muted-cr mb-0">Potential measures include increasing tree cover where suitable, improving shade along walking routes, protecting existing green spaces, introducing appropriate cool-surface treatments and incorporating heat-sensitive design into urban planning. <em>Note: A vulnerability score alone does not establish which intervention delivers the greatest cooling benefit.</em></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULE B: WATERLOGGING -->
+      <div class="module-acc-item">
+        <div class="module-acc-header" id="headingWater">
+          <button class="module-acc-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWater" aria-expanded="false" aria-controls="collapseWater">
+            <div class="module-acc-meta">
+              <div class="module-acc-badge badge-water">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              </div>
+              <div class="module-acc-title-group">
+                <h3>B. Waterlogging Vulnerability</h3>
+                <p>Terrain depressions, slope runoff, precipitation, soil permeability and drainage access</p>
+              </div>
+            </div>
+            <div class="d-flex align-items-center">
+              <span class="module-acc-indicator-count">9 Indicators</span>
+              <svg class="module-acc-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </button>
+        </div>
+
+        <div id="collapseWater" class="accordion-collapse collapse" aria-labelledby="headingWater" data-bs-parent="#modulesAccordion">
+          <div class="module-acc-body">
+            <!-- What are we assessing? -->
+            <div class="mb-4">
+              <h4 class="h6 text-uppercase fw-bold text-muted-cr">What are we assessing?</h4>
+              <p class="prose">Waterlogging occurs when water accumulates on land or streets because water cannot drain away or infiltrate quickly enough.</p>
+              <p class="prose mb-0">Its occurrence depends on several interacting conditions, including rainfall, terrain, surface permeability, drainage capacity and the surrounding landscape. ClimateReady examines selected environmental and geographic characteristics that may influence susceptibility to water accumulation.</p>
+            </div>
+
+            <!-- Indicators Used -->
+            <h4 class="h6 text-uppercase fw-bold text-muted-cr mb-2">Indicators Used</h4>
+            <div class="indicators-subgrid">
+              <!-- DEM -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Digital Elevation Model</h4>
+                  <span class="indicator-tag">DEM</span>
+                </div>
+                <p>A DEM represents the elevation of the land surface. Elevation helps identify relatively low-lying areas where water may collect.</p>
+                <div class="ind-caveat">Elevation alone cannot determine whether a location will flood or become waterlogged.</div>
+              </div>
+
+              <!-- Slope -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Slope</h4>
+                  <span class="indicator-tag">Terrain</span>
+                </div>
+                <p>Slope measures how steeply the land rises or falls. Gentle slopes and depressions favour water accumulation, while steeper terrain encourages runoff to move more quickly.</p>
+                <div class="ind-caveat">The actual effect depends on local drainage and surface conditions.</div>
+              </div>
+
+              <!-- Rainfall -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Rainfall</h4>
+                  <span class="indicator-tag">Precipitation</span>
+                </div>
+                <p>Rainfall describes the amount of precipitation received. Heavy or prolonged rainfall increases the volume of water that must be absorbed, stored or drained.</p>
+                <div class="ind-caveat">Dataset time period and spatial resolution affect how well it represents local cloudbursts.</div>
+              </div>
+
+              <!-- Impervious Surface -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Impervious Surface</h4>
+                  <span class="indicator-tag">Runoff</span>
+                </div>
+                <p>Impervious surfaces (concrete, asphalt, paved roads) limit the infiltration of rainwater into the ground, drastically increasing surface runoff volume.</p>
+                <div class="ind-caveat">Places significant additional pressure on local stormwater drainage systems.</div>
+              </div>
+
+              <!-- Distance to Water Bodies -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Distance to Water Bodies</h4>
+                  <span class="indicator-tag">Hydrology</span>
+                </div>
+                <p>Measures how far a location is from mapped rivers, lakes, wetlands or coastline to provide geographic hydrological context.</p>
+                <div class="ind-caveat">Proximity does not independently establish waterlogging; relevance depends on water body type.</div>
+              </div>
+
+              <!-- Distance to Drainage -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Distance to Drainage</h4>
+                  <span class="indicator-tag">Infrastructure</span>
+                </div>
+                <p>Describes the spatial relationship between an area and mapped stormwater drainage infrastructure.</p>
+                <div class="ind-caveat">Being close to a drain does not guarantee drainage: capacity, blockage, and maintenance matter.</div>
+              </div>
+
+              <!-- Soil Type -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Soil Type</h4>
+                  <span class="indicator-tag">Infiltration</span>
+                </div>
+                <p>Soil characteristics influence how quickly water can infiltrate and percolate through the ground into the aquifer.</p>
+                <div class="ind-caveat">Infiltration rate also depends on compaction, saturation, and land cover.</div>
+              </div>
+
+              <!-- NDVI -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Vegetation Index</h4>
+                  <span class="indicator-tag">NDVI</span>
+                </div>
+                <p>Vegetation can intercept rainfall, support soil infiltration and slow surface runoff velocities under suitable conditions.</p>
+                <div class="ind-caveat">Does not directly measure infiltration or total absorption capacity of root systems.</div>
+              </div>
+
+              <!-- LULC -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Land Use &amp; Land Cover</h4>
+                  <span class="indicator-tag">LULC</span>
+                </div>
+                <p>Characterises built-up areas, tree cover, water, and open ground to evaluate land conversion impacts on runoff.</p>
+                <div class="ind-caveat">Helps distinguish natural sponges from dense sealed construction zones.</div>
+              </div>
+            </div>
+
+            <!-- Score Meaning & Actions -->
+            <div class="row g-4 pt-3 border-top">
+              <div class="col-md-6">
+                <h4 class="h6 text-uppercase fw-bold text-muted-cr">What might a higher vulnerability score indicate?</h4>
+                <p class="small text-muted-cr mb-0">A higher score may reflect a combination of conditions associated with water accumulation, such as low-lying terrain, limited infiltration, extensive impervious surfaces or particular drainage relationships.</p>
+              </div>
+              <div class="col-md-6">
+                <h4 class="h6 text-uppercase fw-bold text-muted-cr">What actions might help?</h4>
+                <p class="small text-muted-cr mb-0">Potential measures include maintaining drains, clearing blocked inlets, improving local stormwater infrastructure, preserving permeable surfaces, restoring suitable green spaces and using rain gardens or nature-based drainage measures where feasible. <em>Note: Some locations require structural drainage engineering rather than surface interventions alone.</em></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULE C: AIR POLLUTION EXPOSURE -->
+      <div class="module-acc-item">
+        <div class="module-acc-header" id="headingAir">
+          <button class="module-acc-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAir" aria-expanded="false" aria-controls="collapseAir">
+            <div class="module-acc-meta">
+              <div class="module-acc-badge badge-air">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
+              </div>
+              <div class="module-acc-title-group">
+                <h3>C. Air Pollution Exposure Vulnerability</h3>
+                <p>Road density, surface heating, urban canopy ventilation, built form and dispersion</p>
+              </div>
+            </div>
+            <div class="d-flex align-items-center">
+              <span class="module-acc-indicator-count">5 Indicators</span>
+              <svg class="module-acc-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </button>
+        </div>
+
+        <div id="collapseAir" class="accordion-collapse collapse" aria-labelledby="headingAir" data-bs-parent="#modulesAccordion">
+          <div class="module-acc-body">
+            <!-- What are we assessing? -->
+            <div class="mb-4">
+              <h4 class="h6 text-uppercase fw-bold text-muted-cr">What are we assessing?</h4>
+              <p class="prose">Air pollution is the presence of harmful substances in the air. People's exposure depends on pollutant concentrations, how long they spend in affected places, their activities and other factors.</p>
+              <p class="prose mb-0">ClimateReady's air-pollution module examines selected environmental and built-up characteristics associated with susceptibility to pollution exposure or pollutant accumulation. <strong>Important:</strong> This module does not necessarily measure actual pollutant concentrations. Its vulnerability score should not be interpreted as an Air Quality Index (AQI), a PM2.5 concentration reading or a direct estimate of an individual's health risk.</p>
+            </div>
+
+            <!-- Indicators Used -->
+            <h4 class="h6 text-uppercase fw-bold text-muted-cr mb-2">Indicators Used</h4>
+            <div class="indicators-subgrid">
+              <!-- Road Density -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Road Density</h4>
+                  <span class="indicator-tag">Traffic</span>
+                </div>
+                <p>Road density describes the concentration of roads within an area, highlighting zones with greater potential exposure to vehicular tailpipe emissions.</p>
+                <div class="ind-caveat">Road density alone cannot determine actual traffic volume, vehicle fleet mix or real-time emissions.</div>
+              </div>
+
+              <!-- LST -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Land Surface Temperature</h4>
+                  <span class="indicator-tag">LST</span>
+                </div>
+                <p>Measures surface heat to characterise the local microclimate and boundary layer conditions.</p>
+                <div class="ind-caveat">Not a direct measurement of airborne pollution or proof that a hotter area has higher pollutant concentrations.</div>
+              </div>
+
+              <!-- NDBI -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Built-up Intensity</h4>
+                  <span class="indicator-tag">NDBI</span>
+                </div>
+                <p>Built form can influence urban ventilation, airflow friction and pollutant trapping in street canyons.</p>
+                <div class="ind-caveat">NDBI alone cannot determine street-canyon geometry, building height or aerodynamic dispersion.</div>
+              </div>
+
+              <!-- Wind Speed -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Wind Speed</h4>
+                  <span class="indicator-tag">Ventilation</span>
+                </div>
+                <p>Wind influences the transport, dilution and dispersion of air pollutants across an urban basin.</p>
+                <div class="ind-caveat">Stronger winds can disperse emissions, but direction, terrain and sources produce varied local outcomes.</div>
+              </div>
+
+              <!-- NDVI -->
+              <div class="indicator-card">
+                <div class="indicator-card-title">
+                  <h4>Vegetation Index</h4>
+                  <span class="indicator-tag">NDVI</span>
+                </div>
+                <p>Vegetation may influence local environments through particulate deposition, shading and changes in airflow patterns.</p>
+                <div class="ind-caveat">Effects vary by tree species and canopy structure; vegetation should not be assumed to eliminate pollution in every setting.</div>
+              </div>
+            </div>
+
+            <!-- Score Meaning & Actions -->
+            <div class="row g-4 pt-3 border-top">
+              <div class="col-md-6">
+                <h4 class="h6 text-uppercase fw-bold text-muted-cr">What might a higher vulnerability score indicate?</h4>
+                <p class="small text-muted-cr mb-0">A higher score may indicate a combination of environmental characteristics associated with potential susceptibility to pollution exposure or accumulation, according to the scoring framework. It does not confirm that pollutant concentrations are higher at that exact location.</p>
+              </div>
+              <div class="col-md-6">
+                <h4 class="h6 text-uppercase fw-bold text-muted-cr">What actions might help?</h4>
+                <p class="small text-muted-cr mb-0">Potential measures include reducing unnecessary vehicle idling, supporting cleaner transport, improving traffic management, protecting suitable green buffers and conducting air-quality monitoring near potentially exposed communities. <em>Note: Transport planning and emission standards require action by public authorities.</em></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
-</div></section>
+</section>
 
-<section class="section"><div class="container-xl"><div class="row g-4">
-  <div class="col-md-6"><h2 class="section-title">Validation &amp; Reliability</h2>
-    <p class="prose">The framework is evaluated through consistency checks, sensitivity assessment and available validation and cross-checking approaches.</p></div>
-  <div class="col-md-6"><h2 class="section-title">Limitations</h2>
-    <div class="callout"><p class="mb-0">Results are intended as a local decision-support assessment and should be interpreted alongside local knowledge, field observations and detailed planning studies.</p></div></div>
-</div></div></section>
+<!-- 5. Understanding Your Vulnerability Map -->
+<section class="section" id="vulnerability-map">
+  <div class="container-xl">
+    <div class="section-badge">Interpretation Guide</div>
+    <h2 class="section-title">5. Understanding Your Vulnerability Map</h2>
+    <p class="lead-cr">ClimateReady groups the resulting assessment scores into five classes to make spatial patterns easier to interpret.</p>
+
+    <!-- Five Classes Scale -->
+    <div class="risk-scale-row">
+      <div class="risk-level-card">
+        <div class="swatch-lg sw1"></div>
+        <h4>Very Low</h4>
+        <p>The area falls within the lowest assessment class. Its score reflects relatively lower contributions from the indicators in the implemented framework.</p>
+      </div>
+
+      <div class="risk-level-card">
+        <div class="swatch-lg sw2"></div>
+        <h4>Low</h4>
+        <p>The area falls within a relatively low assessment class. It may still contain local issues that are not captured by the available data.</p>
+      </div>
+
+      <div class="risk-level-card">
+        <div class="swatch-lg sw3"></div>
+        <h4>Moderate</h4>
+        <p>The area falls within the middle assessment class and may warrant closer examination of its environmental characteristics.</p>
+      </div>
+
+      <div class="risk-level-card">
+        <div class="swatch-lg sw4"></div>
+        <h4>High</h4>
+        <p>The area falls within a higher assessment class and may deserve priority for further investigation or suitable interventions.</p>
+      </div>
+
+      <div class="risk-level-card">
+        <div class="swatch-lg sw5"></div>
+        <h4>Very High</h4>
+        <p>The area falls within the highest assessment class and may warrant particular attention when setting priorities for follow-up assessment and action.</p>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-3">
+      <div class="col-md-6">
+        <div class="p-4 bg-white border rounded-3 h-100">
+          <h3 class="h5 mb-2">What do the classes actually mean?</h3>
+          <p class="prose mb-0">These categories describe the assessment score—not a universal probability of an event, a measured amount of harm or an official warning level.</p>
+          <p class="prose mt-2 mb-0">A Very High score does not necessarily mean that an event will occur, and a Very Low score does not mean that an area is completely safe. The classification method and score thresholds determine how the classes should be interpreted. When classes are generated using relative thresholds, a location's class may also depend on the other locations included in the assessment.</p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="p-4 bg-white border rounded-3 h-100">
+          <h3 class="h5 mb-2">Why explore the individual indicator maps?</h3>
+          <p class="prose mb-0">The composite map summarises multiple indicators into one view. Individual indicator maps help you understand the environmental patterns contributing to that summary.</p>
+          <p class="prose mt-2 mb-0">For example, a location with a high heat-vulnerability score may also have high surface temperatures and limited vegetation. Examining these layers separately helps users interpret the score rather than treating it as an unexplained number. However, the composite score and its indicators should be interpreted within the assumptions of the assessment framework.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. From Vulnerability to Recommendations -->
+<section class="section section-muted" id="recommendations">
+  <div class="container-xl">
+    <div class="section-badge">Action Framework</div>
+    <h2 class="section-title">6. From Vulnerability to Recommendations</h2>
+    <p class="lead-cr">Identifying vulnerable areas is only the first step. The next is to explore what could be done. ClimateReady connects the assessment to recommendations intended to help users consider appropriate responses to the environmental conditions identified in the selected region.</p>
+
+    <div class="action-levels-grid">
+      <div class="action-level-card">
+        <h4>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Individual Level
+        </h4>
+        <p>Actions that people can take in their daily routines or immediate surroundings, where appropriate — such as maintaining domestic cool roofs, installing rainwater barrels, or timing outdoor travel during low-pollution windows.</p>
+      </div>
+
+      <div class="action-level-card">
+        <h4>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Community Level
+        </h4>
+        <p>Measures that residents, housing societies, community groups or local organisations may be able to coordinate — such as neighborhood tree planting, permeable courtyard paving, community shade networks, and drain-cleaning drives.</p>
+      </div>
+
+      <div class="action-level-card">
+        <h4>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2"/></svg>
+          Municipal &amp; Planning Level
+        </h4>
+        <p>Actions that may require public authorities, infrastructure investment, technical assessment or changes in planning and maintenance — including arterial drain expansion, urban zoning, green corridors, and public transit decarbonisation.</p>
+      </div>
+    </div>
+
+    <div class="callout mt-4">
+      <p class="mb-0"><strong>Why level of action matters:</strong> Not every environmental problem can be solved by individuals. A drainage bottleneck may require engineering and maintenance, while a neighbourhood with inadequate shade may benefit from community planting as well as public-space planning. Recommendations are intended to guide further consideration. Their feasibility, costs and expected benefits depend on local circumstances and should be assessed before implementation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Data, Reliability and Validation -->
+<section class="section" id="data-validation">
+  <div class="container-xl">
+    <div class="section-badge">Methodological Rigour</div>
+    <h2 class="section-title">7. Data, Reliability and Validation</h2>
+    <p class="lead-cr mb-4">ClimateReady depends on the quality, spatial resolution, time period and coverage of the underlying datasets.</p>
+
+    <div class="prose mb-4">
+      <p>Satellite observations, terrain data, rainfall records, road networks and other geographic datasets provide different types of information. They do not all measure the same phenomenon or represent conditions at the same spatial and temporal resolution.</p>
+      <p>To make the assessment more consistent, the framework prepares and standardises indicators before combining them. Where applicable, methodological checks can examine the consistency of weighting decisions, the sensitivity of results to changes in assumptions and the agreement between mapped patterns and independent observations.</p>
+    </div>
+
+    <div class="checks-grid">
+      <div class="check-item-card">
+        <h4>Consistency Checks</h4>
+        <p>Are the weighting decisions internally consistent? Verifies multi-criteria weight distributions and normalisation bounds across environmental layers.</p>
+      </div>
+
+      <div class="check-item-card">
+        <h4>Sensitivity Assessment</h4>
+        <p>Do the results change substantially when indicator weights or assumptions change? Ensures composite risk scores are robust and not overly fragile to minor weight alterations.</p>
+      </div>
+
+      <div class="check-item-card">
+        <h4>Independent Cross-Checking</h4>
+        <p>Are the mapped patterns broadly consistent with reliable local observations or external datasets? Ground-truth comparison where local records exist.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-amber mt-4">
+      <p class="mb-0"><strong>Validation Caveat:</strong> A mathematically consistent weighting scheme does not automatically prove that a vulnerability map is accurate. Independent validation requires suitable reference data, and its strength depends on the quality and coverage of that data. Details of validation should be reported only where the relevant checks have actually been performed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Limitations of ClimateReady -->
+<section class="section section-muted" id="limitations">
+  <div class="container-xl">
+    <div class="section-badge">Platform Boundaries</div>
+    <h2 class="section-title">8. Limitations of ClimateReady</h2>
+    <p class="lead-cr mb-4">ClimateReady is designed as a screening and decision-support platform. It is not intended to replace detailed scientific studies, official warnings, field surveys or professional engineering assessments.</p>
+
+    <div class="limitations-grid">
+      <div class="limitation-card">
+        <h4><span>1.</span> Indicator-based assessment</h4>
+        <p>The maps are derived from selected indicators and the assumptions used to combine them. They represent the conditions captured by the framework, not every factor that can influence environmental risk.</p>
+      </div>
+
+      <div class="limitation-card">
+        <h4><span>2.</span> Data availability &amp; quality</h4>
+        <p>Some datasets may contain missing values, incomplete geographic coverage or differences in resolution and observation period. These limitations can affect the resulting spatial patterns.</p>
+      </div>
+
+      <div class="limitation-card">
+        <h4><span>3.</span> Spatial resolution</h4>
+        <p>The apparent detail of a map does not guarantee that every street, building or individual property has been assessed accurately. A map cell or mapped area may not capture small-scale conditions on the ground.</p>
+      </div>
+
+      <div class="limitation-card">
+        <h4><span>4.</span> Temporal variability</h4>
+        <p>Environmental conditions change over time. Satellite observations, rainfall records, wind data and land-cover datasets may represent different periods. The maps should not be assumed to describe current conditions unless the underlying data and update schedule support that interpretation.</p>
+      </div>
+
+      <div class="limitation-card">
+        <h4><span>5.</span> Relative scores, not universal thresholds</h4>
+        <p>The five classes are categories within the implemented assessment framework. They are not necessarily official risk thresholds and should not be interpreted as precise probabilities of harm.</p>
+      </div>
+
+      <div class="limitation-card">
+        <h4><span>6.</span> Vulnerability &ne; measured hazard</h4>
+        <p>A vulnerability assessment does not necessarily measure actual event frequency, pollutant concentrations, flood depth, human exposure or health outcomes. These require suitable additional data and methods.</p>
+      </div>
+
+      <div class="limitation-card">
+        <h4><span>7.</span> Recommendations require local judgement</h4>
+        <p>A recommendation that is appropriate for one neighbourhood may not be suitable for another. Feasibility, cost, local infrastructure, community needs and environmental impacts should be considered before implementing an intervention.</p>
+      </div>
+
+      <div class="limitation-card">
+        <h4><span>8.</span> No guarantee of safety or prediction</h4>
+        <p>ClimateReady cannot guarantee that a location is safe, predict exactly when an event will occur or establish the sole cause of a particular environmental problem.</p>
+      </div>
+    </div>
+
+    <!-- Use ClimateReady as a starting point -->
+    <div class="p-4 bg-white border rounded-3 mt-4">
+      <h3 class="h5 mb-2">Use ClimateReady as a starting point</h3>
+      <p class="prose mb-0">ClimateReady helps users identify patterns, understand environmental indicators and explore possible actions. Its results are most useful when combined with local knowledge, field observations, reliable monitoring data and expert assessment where needed.</p>
+      <p class="prose mt-2 mb-0"><strong>The goal is not to replace local expertise, but to make environmental information easier to understand and use in decisions.</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- Final Call to Action -->
+<section class="section pt-0">
+  <div class="container-xl">
+    <div class="final-action-card">
+      <h2>Make Informed Local Climate Decisions</h2>
+      <p>Explore your selected region, understand the environmental conditions associated with vulnerability, and use the results as a starting point for informed local action.</p>
+      <div class="mb-3">
+        <a class="btn btn-white btn-lg" href="{{ url_for('analysis') }}">Launch Map Analysis &rarr;</a>
+      </div>
+      <small class="opacity-75">ClimateReady &mdash; From environmental data to local understanding and action.</small>
+    </div>
+  </div>
+</section>
 {% endblock %}

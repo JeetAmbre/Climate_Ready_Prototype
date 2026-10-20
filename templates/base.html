@@ -30,7 +30,7 @@
       <div class="collapse navbar-collapse" id="navMenu">
         <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
           {% for ep, label in
-          [('index','Home'),('about','About'),('analysis','Analysis'),('methodology','Methodology'),('contact','Contact')]
+          [('index','Home'),('about','About'),('analysis','Analysis'),('methodology','Explore & Learn'),('contact','Contact')]
           %}
           <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == ep }}" href="{{ url_for(ep) }}">{{
               label }}</a></li>
@@ -56,7 +56,7 @@
           <h6>Platform</h6>
           <ul class="list-unstyled">
             <li><a href="{{ url_for('analysis') }}">Analysis</a></li>
-            <li><a href="{{ url_for('methodology') }}">Methodology</a></li>
+            <li><a href="{{ url_for('methodology') }}">Explore & Learn</a></li>
             <li><a href="{{ url_for('about') }}">About</a></li>
             <li><a href="{{ url_for('contact') }}">Contact</a></li>
           </ul>
@@ -65,7 +65,7 @@
           <h6>Resources</h6>
           <ul class="list-unstyled">
             <li><a href="{{ url_for('analysis') }}">Assessment</a></li>
-            <li><a href="{{ url_for('methodology') }}">Methodology</a></li>
+            <li><a href="{{ url_for('methodology') }}">Explore & Learn</a></li>
           </ul>
         </div>
         <div class="col-12 col-lg-2">

@@ -7,7 +7,10 @@
 {% endblock %}
 {% block footer %}{% endblock %}
 {% block content %}
-<script>window.CR_CFG = {{ cfg|tojson }};</script>
+<script id="crCfgData" type="application/json">{{ cfg|tojson }}</script>
+<script>
+  window.CR_CFG = JSON.parse(document.getElementById('crCfgData').textContent || '{}');
+</script>
 
 <!-- 1. Location selection bar -->
 <section class="loc-bar">

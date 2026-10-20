@@ -82,6 +82,8 @@ def analysis():
            "loaded": {k: k in store.levels for k in ("district", "subdistrict")}, "errors": store.errors}
     return render_template("analysis.html", cfg=cfg)
 @app.route("/methodology")
+@app.route("/explore")
+@app.route("/explore-and-learn")
 def methodology(): return render_template("methodology.html")
 @app.route("/about")
 def about(): return render_template("about.html")

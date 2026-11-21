@@ -43,24 +43,21 @@ class LiveTrackingService:
         live_png_path = proj_dir / f"live_{hazard}.png"
         meta_path = proj_dir / f"live_{hazard}_meta.json"
 
-        # Check existing cached layer if not forcing refresh
-        if not force_refresh and live_png_path.exists() and meta_path.exists():
+        # Check existing cached layer if not forcing refresh (or if demo project)
+        if live_png_path.exists() and meta_path.exists():
             try:
                 meta = json.loads(meta_path.read_text(encoding="utf-8"))
-                cached_date = meta.get("timestamp_date")
-                # Keep cache valid for 2 days
-                if cached_date:
-                    c_dt = datetime.fromisoformat(cached_date)
-                    if (datetime.utcnow() - c_dt).total_seconds() < 86400 * 2:
-                        return {
-                            "ok": True,
-                            "hazard": hazard,
-                            "overlay_url": f"/api/tracking/live_overlay.png?project_id={project_id}&hazard={hazard}&t={meta.get('timestamp')}",
-                            "bounds": meta.get("bounds"),
-                            "timestamp": meta.get("formatted_timestamp", "Recent Observation"),
-                            "window_days": meta.get("window_days", 60),
-                            "cached": True,
-                        }
+                if meta.get("is_demo") or not force_refresh:
+                    return {
+                        "ok": True,
+                        "hazard": hazard,
+                        "overlay_url": f"/api/tracking/live_overlay.png?project_id={project_id}&hazard={hazard}&t={meta.get('timestamp')}",
+                        "bounds": meta.get("bounds"),
+                        "timestamp": meta.get("formatted_timestamp", "Recent Observation"),
+                        "full_window": meta.get("full_window", "Rolling 60-Day Observation"),
+                        "window_days": meta.get("window_days", 60),
+                        "cached": True,
+                    }
             except Exception as e:
                 print(f"[live_tracking] Cache read note: {e}")
 
@@ -187,6 +184,14 @@ class LiveTrackingService:
             )
             if not dp:
                 raise ValueError("No locked adaptation plan found. Please lock a plan in Stage 3 first.")
+
+            # If this is a demo project with a verified impact summary, return it immediately
+            if getattr(p, "is_demo", False) and dp.impact_summary_json:
+                try:
+                    summary = json.loads(dp.impact_summary_json)
+                    return summary
+                except Exception:
+                    pass
 
             # Load selected intervention rows (support both string IDs and numerical zone indices)
             sel_ids = json.loads(dp.selected_recommendation_ids) if dp.selected_recommendation_ids else []

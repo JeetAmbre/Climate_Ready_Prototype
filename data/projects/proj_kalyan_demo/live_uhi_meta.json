@@ -1,0 +1,19 @@
+{
+  "timestamp": 1795219375,
+  "timestamp_date": "2026-11-21T05:32:55.121066",
+  "formatted_timestamp": "Live 60d: Nov 21, 2026",
+  "full_window": "Rolling 60-Day Satellite Observation Benchmark (Calibrated Post-Intervention)",
+  "bounds": [
+    [
+      19.1399689,
+      73.0554907
+    ],
+    [
+      19.4020449,
+      73.3226312
+    ]
+  ],
+  "tile_url": "https://earthengine.googleapis.com/v1/projects/climateready-web-app/maps/4c2579a942da41dc58d328035a6e63c7-f564a24c52dc953d64b3cadb06b74b8c/tiles/{z}/{x}/{y}",
+  "is_demo": true,
+  "hazard": "uhi"
+}

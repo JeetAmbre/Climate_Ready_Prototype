@@ -16,8 +16,8 @@ class ProjectStore:
         db = SessionLocal()
         try:
             projects = db.query(ProjectModel).filter(
-                ProjectModel.user_id == user_id
-            ).order_by(ProjectModel.created_at.desc()).all()
+                (ProjectModel.user_id == user_id) | (ProjectModel.is_demo == True)
+            ).order_by(ProjectModel.is_demo.desc(), ProjectModel.created_at.desc()).all()
             return [p.to_dict() for p in projects]
         finally:
             db.close()

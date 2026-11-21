@@ -178,7 +178,7 @@ def _reason_hazard_hotspots(
             except Exception as primary_exc:
                 print(f"[indicator_reasoning] Primary model error for {hazard}: {primary_exc}. Trying fast fallback model...")
                 try:
-                    fallback_llm = get_llm(temperature=0.2, model=os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash-lite"))
+                    fallback_llm = get_llm(temperature=0.2, model=os.getenv("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash"))
                     if fallback_llm:
                         res = fallback_llm.with_structured_output(InterventionsListSchema).invoke([
                             SystemMessage(content=system_prompt),
@@ -210,6 +210,7 @@ def _reason_hazard_hotspots(
                         d["building_area_sqm"] = bld_a
                         d["road_area_sqm"] = road_a
                         d["open_area_sqm"] = open_a
+                        d["population_impacted"] = int(matching_h.get("population_impacted") or max(180, int(round((poly_area / 1e6) * 14000))))
 
                         # Strictly enforce realistic pilot caps based on physical surface
                         surf = d.get("target_surface_type") or "Buildings"
@@ -311,6 +312,7 @@ def _reason_hazard_hotspots(
                 "building_area_sqm": bld_a,
                 "road_area_sqm": road_a,
                 "open_area_sqm": open_a,
+                "population_impacted": int(h.get("population_impacted") or max(180, int(round((poly_area / 1e6) * 14000)))),
                 "target_surface_type": surf,
                 "allocated_intervention_area_sqm": alloc,
                 "estimated_intervention_area_sqm": alloc,

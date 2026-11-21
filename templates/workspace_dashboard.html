@@ -61,6 +61,11 @@
               <span class="focus-badge">Dual Hazard (Heat + Waterlogging)</span>
               <span class="status-badge status-active">{{ p.status }}</span>
             </div>
+            {% if p.is_demo %}
+            <div class="mb-2">
+              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-monospace" style="font-size: 0.72rem;">{{ p.demo_badge_label }}</span>
+            </div>
+            {% endif %}
             <h3 class="h5 fw-bold text-dark mb-1">
               <a href="{{ url_for('assessment_project', project_id=p.id) }}" class="text-decoration-none text-dark stretched-link">
                 {{ p.name }}

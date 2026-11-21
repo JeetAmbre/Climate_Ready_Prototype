@@ -155,6 +155,9 @@
           <a href="{{ url_for('assessment') }}" class="text-decoration-none small text-muted-cr">← Back to Assessments</a>
           <span class="text-muted small">/</span>
           <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">{{ project.status }}</span>
+          {% if project.is_demo %}
+          <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-monospace" style="font-size: 0.75rem;">{{ project.demo_badge_label }}</span>
+          {% endif %}
         </div>
         <h1 class="h4 fw-bold text-dark mb-0">{{ project.name }}</h1>
         <div class="small text-muted-cr mt-1">

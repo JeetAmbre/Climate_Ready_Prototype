@@ -42,7 +42,7 @@
 
 ### A. Core Application & Server
 - `app.py`: Flask application entry point, routing, API endpoints, job queueing, raster tile/overlay endpoints, and report endpoints.
-- `wsgi.py`: Production WSGI entry point for Gunicorn and Google Cloud Run containers (`gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 180 wsgi:app`).
+- `wsgi.py`: Production WSGI entry point for Gunicorn and Google Cloud Run containers (`gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 300 wsgi:app`).
 - `config.py`: Core configuration (hazards, breaks, scales, location limits, file upload thresholds, environment variables).
 - `jobs.py`: In-memory and persisted assessment job state manager (`JobManager`, `Job`, status transitions).
 - `mailer.py`: Contact form submission handler, JSONL logging, and optional SMTP notification.

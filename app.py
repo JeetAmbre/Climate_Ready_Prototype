@@ -114,7 +114,40 @@ def err(msg, code=400):
 
 
 def current_job():
-    job = manager.get(session.get("job_id", ""))
+    # 1. Check job_id from query param, json body, or session
+    job_id = None
+    try:
+        if request:
+            job_id = request.args.get("job_id")
+            if not job_id and request.is_json:
+                job_id = (request.get_json(silent=True) or {}).get("job_id")
+    except Exception:
+        pass
+    if not job_id:
+        job_id = session.get("job_id", "")
+    
+    job = manager.get(job_id) if job_id else None
+    
+    # 2. If not found by job_id, search by project_id in active jobs
+    if not job:
+        pid = None
+        try:
+            if request:
+                pid = request.args.get("project_id") or request.args.get("pid")
+                if not pid and request.is_json:
+                    pid = (request.get_json(silent=True) or {}).get("project_id")
+        except Exception:
+            pass
+        if not pid:
+            pid = session.get("project_id")
+        if pid:
+            for j in list(manager.jobs.values()):
+                if getattr(j, "project_id", None) == pid:
+                    job = j
+                    break
+            if not job:
+                job = manager.get(f"proj_job_{pid}")
+
     if job:
         job.last_seen = time.time()           # heartbeat: the user's page is still there
     return job
@@ -509,6 +542,20 @@ def assessment_cancel():
 def assessment_status():
     job = current_job()
     if not job:
+        # Check if project already has completed assessment in database!
+        pid = None
+        try:
+            pid = request.args.get("project_id") or request.args.get("pid")
+            if not pid and request.is_json:
+                pid = (request.get_json(silent=True) or {}).get("project_id")
+        except Exception:
+            pass
+        if not pid:
+            pid = session.get("project_id")
+        if pid:
+            p = project_store.get_project(pid)
+            if p and p.get("assessment_data"):
+                return jsonify(state="COMPLETED", steps=[], error=None, job_id=f"proj_job_{pid}")
         return jsonify(state="NONE")
     return jsonify(job.public_status(manager.position(job) if job.state == jobs_mod.QUEUED else None))
 

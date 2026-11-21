@@ -134,7 +134,10 @@
     if (!S.custom && !S.picked.length) return msg('Add at least one location first.');
     if (S.state === 'done' && !window.CR_PROJECT && !confirm('Your current assessment will be lost. Do you want to leave?')) return;
     try {
-      await post('/api/assessment/start', payload);
+      const res = await post('/api/assessment/start', payload);
+      if (res && res.job_id) {
+        S.jobId = res.job_id;
+      }
     } catch (e) { return msg(e.message, e.status === 503 ? 'danger' : 'warning'); }
     resetResults(); S.state = 'queued'; setBusy(true);
     ['stateEmpty', 'stateError', 'workspace', 'projectLaunchCard'].forEach(id => { if ($(id)) hide(id); });
@@ -152,14 +155,25 @@
     const done = steps.filter(s => s.status === 'done').length + 0.5 * steps.filter(s => s.status === 'active').length;
     $('loadBar').style.width = steps.length ? Math.min(100, 100 * done / steps.length) + '%' : '0';
   }
+  let noneCount = 0;
   async function poll() {
-    let st; try { st = await api('/api/assessment/status'); } catch (e) { return; }
+    let url = '/api/assessment/status';
+    const params = [];
+    if (S.jobId) params.push(`job_id=${encodeURIComponent(S.jobId)}`);
+    if (window.CR_PROJECT && window.CR_PROJECT.id) params.push(`project_id=${encodeURIComponent(window.CR_PROJECT.id)}`);
+    if (params.length) url += '?' + params.join('&');
+
+    let st; try { st = await api(url); } catch (e) { return; }
     if (st.state === 'NONE' && (S.state === 'queued' || S.state === 'processing')) {
+      noneCount++;
+      // Allow up to 4 poll cycles (8 seconds) in case of worker routing or transient status transition
+      if (noneCount < 4) return;
       clearInterval(S.poll); clearInterval(S.tick); S.state = 'idle'; setBusy(false); keepAwake(false);
       hide('stateQueue'); hide('stateLoading');
       $('errMsg').textContent = 'The assessment was stopped (the server restarted, or the page was inactive for too long). Please start it again.';
       show('stateError'); return;
     }
+    noneCount = 0;
     if (st.state === 'QUEUED') {
       S.state = 'queued'; hide('stateLoading'); show('stateQueue');
       $('queuePos').textContent = st.queue_position ? `You are currently #${st.queue_position} in the queue.` : '';
@@ -185,7 +199,13 @@
     }
   }
   async function loadResults() {
-    const [L, stats] = await Promise.all([api('/api/layers'), api('/api/statistics')]);
+    let query = '';
+    const params = [];
+    if (S.jobId) params.push(`job_id=${encodeURIComponent(S.jobId)}`);
+    if (window.CR_PROJECT && window.CR_PROJECT.id) params.push(`project_id=${encodeURIComponent(window.CR_PROJECT.id)}`);
+    if (params.length) query = '?' + params.join('&');
+
+    const [L, stats] = await Promise.all([api('/api/layers' + query), api('/api/statistics' + query)]);
     S.layers = L.layers; S.label = L.label; S.state = 'done'; setBusy(false);
     hide('stateLoading'); show('workspace'); show('statsSection');
     $('wsAreas').textContent = L.label;

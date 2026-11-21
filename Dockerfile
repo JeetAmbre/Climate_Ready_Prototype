@@ -31,5 +31,5 @@ COPY . .
 # Expose the default Cloud Run port
 EXPOSE 8080
 
-# Run Gunicorn with 2 workers, 4 threads, and 180s timeout for heavy GEE computations
-CMD exec gunicorn --bind 0.0.0.0:${PORT} --workers 2 --threads 4 --timeout 180 wsgi:app
+# Run Gunicorn with 1 worker and 8 threads to ensure shared in-memory job state across requests, with 300s timeout
+CMD exec gunicorn --bind 0.0.0.0:${PORT} --workers 1 --threads 8 --timeout 300 wsgi:app

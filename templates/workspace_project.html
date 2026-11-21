@@ -1,0 +1,1284 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} · Assessment · ClimateReady{% endblock %}
+{% block body_class %}page-analysis{% endblock %}
+{% block head %}
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/analysis.css', v=build_id) }}" rel="stylesheet">
+<style>
+  /* Ensure Top Main Navbar is above all sub-elements */
+  .cr-nav.sticky-top {
+    z-index: 1000 !important;
+  }
+  /* 4-Module Workspace Tabs Navigation - Stays strictly above scrolling maps */
+  .ws-nav-tabs {
+    background: #fff; border-bottom: 2px solid #E2E8F0;
+    position: sticky; top: 60px; z-index: 800;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  }
+  /* Ensure Leaflet controls never bleed over sticky navbars */
+  .leaflet-top, .leaflet-bottom, .leaflet-control {
+    z-index: 400 !important;
+  }
+  /* Layer Stacking Order: Base Tiles (200) < Analytic Raster Overlay (350) < AOI (400) < Polygons (550) < Markers (650) < Popups (750) */
+  .leaflet-pane.leaflet-analytic-pane {
+    z-index: 350 !important;
+  }
+  .leaflet-pane.leaflet-polygonsPane-pane {
+    z-index: 550 !important;
+  }
+  .leaflet-pane.leaflet-marker-pane,
+  .leaflet-pane.leaflet-markersPane-pane {
+    z-index: 650 !important;
+  }
+  .leaflet-pane.leaflet-popup-pane {
+    z-index: 750 !important;
+  }
+  .map-root, #map, #mapUhi, #mapWater {
+    z-index: 1;
+  }
+  .ws-nav-tab {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.85rem 1.25rem; font-weight: 500; font-size: 0.95rem;
+    color: #475569; text-decoration: none; border-bottom: 3px solid transparent;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .ws-nav-tab:hover { color: #166534; background: #F8FAFC; }
+  .ws-nav-tab.active {
+    color: #166534; border-bottom-color: #166534; font-weight: 600;
+  }
+  .ws-nav-tab .step-badge {
+    display: inline-block; width: 22px; height: 22px; border-radius: 50%;
+    background: #E2E8F0; color: #475569; font-size: 0.75rem; text-align: center;
+    line-height: 22px; font-weight: 600;
+  }
+  .ws-nav-tab.active .step-badge {
+    background: #166534; color: #fff;
+  }
+  .project-header-bar {
+    background: #F8FAFC; border-bottom: 1px solid #E2E8F0;
+    padding: 0.75rem 1.5rem;
+  }
+  .tab-pane-content {
+    min-height: calc(100vh - 200px);
+  }
+  @media (min-width: 992px) {
+    .border-end-lg {
+      border-right: 1px solid #E2E8F0 !important;
+    }
+  }
+  .table-success-subtle {
+    background-color: rgba(22, 163, 74, 0.08) !important;
+  }
+  .btn-xs {
+    padding: 0.15rem 0.45rem;
+    font-size: 0.72rem;
+    border-radius: 4px;
+  }
+  /* Module 4 Tracking & Impact Side-by-Side Map Grid */
+  .track-maps-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    align-items: stretch;
+  }
+  @media (max-width: 767.98px) {
+    .track-maps-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .track-map-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+  .track-map-header {
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    box-sizing: border-box;
+  }
+  .track-map-footer {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    box-sizing: border-box;
+  }
+  @media print {
+    .cr-nav, .ws-nav-tabs, .project-header-bar, .modal-header, .modal-footer, #planCompareModal {
+      display: none !important;
+    }
+    body * {
+      visibility: hidden;
+    }
+    #planReportModal, #planReportModal * {
+      visibility: visible;
+    }
+    #planReportModal {
+      position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0;
+    }
+    .modal-dialog {
+      max-width: 100% !important; margin: 0 !important;
+    }
+    .modal-content {
+      border: none !important; box-shadow: none !important;
+    }
+  }
+  .placeholder-card {
+    background: #fff; border: 2px dashed #CBD5E1; border-radius: 12px;
+    padding: 3.5rem 2rem; text-align: center; max-width: 680px; margin: 3rem auto;
+  }
+  .launch-assessment-card {
+    background: #fff; border: 1px solid #E2E8F0; border-radius: 12px;
+    padding: 2.5rem; text-align: center; max-width: 620px; margin: 2rem auto;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  }
+</style>
+{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<script id="crCfgData" type="application/json">{{ cfg|tojson }}</script>
+<script id="crProjectData" type="application/json">{{ project|tojson }}</script>
+<script>
+  window.CR_CFG = JSON.parse(document.getElementById('crCfgData').textContent || '{}');
+  window.CR_PROJECT = JSON.parse(document.getElementById('crProjectData').textContent || '{}');
+  window.CR_EXPLORER_MODE = false;
+</script>
+
+<!-- Project Meta Banner -->
+<section class="project-header-bar">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <a href="{{ url_for('assessment') }}" class="text-decoration-none small text-muted-cr">← Back to Assessments</a>
+          <span class="text-muted small">/</span>
+          <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">{{ project.status }}</span>
+        </div>
+        <h1 class="h4 fw-bold text-dark mb-0">{{ project.name }}</h1>
+        <div class="small text-muted-cr mt-1">
+          <span>📍 <strong>{{ project.location_name }}</strong> ({{ project.level|title }})</span>
+          <span class="mx-2">•</span>
+          <span>Multi-Hazard Climate Resilience Assessment</span>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-danger btn-sm" id="deleteProjectBtn" type="button" title="Delete assessment">Delete Assessment</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4-Stage Navigation Tabs -->
+<nav class="ws-nav-tabs" aria-label="Project Workflow Stages">
+  <div class="container-fluid px-3 px-lg-4">
+    <div class="d-flex overflow-auto">
+      <div class="ws-nav-tab active" data-tab="risk-profile">
+        <span class="step-badge">1</span>
+        <span>Risk Profile</span>
+      </div>
+      <div class="ws-nav-tab" data-tab="interventions">
+        <span class="step-badge">2</span>
+        <span>Intervention Discovery</span>
+      </div>
+      <div class="ws-nav-tab" data-tab="decision-planner">
+        <span class="step-badge">3</span>
+        <span>Decision Support</span>
+      </div>
+      <div class="ws-nav-tab" data-tab="monitoring">
+        <span class="step-badge">4</span>
+        <span>Tracking & Impact</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Hidden initial location selection bridge for analysis.js -->
+<div class="d-none">
+  <select id="levelSel"><option value="{{ project.level }}">{{ project.level }}</option></select>
+  <input id="locInput" value="{{ project.location_name }}">
+  <div id="chips">
+    <div class="chip" data-id="{{ project.location_id }}" data-name="{{ project.location_name }}">{{ project.location_name }}</div>
+  </div>
+  <span id="chipLabel">{{ project.location_name }}</span>
+  <button id="addBtn"></button><button id="uploadBtn"></button><input type="file" id="uploadFile">
+  <div id="locMsg"></div><div id="locResults"></div>
+</div>
+
+<!-- ==================== TAB 1: RISK PROFILE ==================== -->
+<div class="tab-pane-content" id="tabContent-risk-profile">
+  <!-- 1. Launch Risk Assessment Button Prompt (Shown before run) -->
+  <section class="container py-4" id="projectLaunchCard">
+    <div class="launch-assessment-card">
+      <div class="p-3 bg-success-subtle text-success rounded-circle d-inline-flex mb-3">
+        <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      </div>
+      <h2 class="h4 fw-bold mb-2">Generate Risk Profile for {{ project.location_name }}</h2>
+      <p class="text-muted-cr small mb-4 mx-auto" style="max-width: 460px;">
+        Click below to run the multi-hazard Earth Engine assessment. ClimateReady will compute Urban Heat, Waterlogging, and Socio-Economic indicator layers for {{ project.location_name }}.
+      </p>
+      <button class="btn btn-primary btn-lg px-4 shadow-sm" id="startBtn" type="button">
+        ⚡ Start Risk Assessment
+      </button>
+    </div>
+  </section>
+
+  <!-- Assessment Loading / Queue States -->
+  <section class="state d-none" id="stateQueue" aria-live="polite"><div class="state-box">
+    <h1>Assessment Queue Busy</h1>
+    <p>ClimateReady is queuing analysis. Processing begins momentarily.</p>
+    <p class="fw-medium" id="queuePos"></p><div class="spinner-border text-success" role="status"></div></div></section>
+  <section class="state d-none" id="stateLoading" aria-live="polite"><div class="state-box">
+    <h1>Computing Satellite Risk Profile</h1><ul class="steps" id="loadSteps"></ul>
+    <div class="progress" style="height:4px"><div class="progress-bar" id="loadBar" style="width:0"></div></div>
+    <p class="small text-muted-cr mt-3 mb-0"><span id="loadElapsed">Elapsed 0:00</span> · Processing Earth Engine satellite layers</p></div></section>
+  <section class="state d-none" id="stateError" role="alert"><div class="state-box">
+    <h1>Could not compute assessment</h1><p id="errMsg">Please try again.</p>
+    <button class="btn btn-primary" id="retryBtn" type="button">Retry Assessment</button></div></section>
+
+  <!-- Interactive Risk Profile Workspace (Side panel + Map) -->
+  <section class="workspace d-none" id="workspace">
+    <div class="ws-head d-flex justify-content-between align-items-center">
+      <div><span class="fw-medium">Assessed Location:</span> <span class="text-muted-cr" id="wsAreas">{{ project.location_name }}</span></div>
+      <div class="d-flex align-items-center gap-2">
+        <a href="#statsSection" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1" id="scrollToStatsBtn">
+          <span>📊 View Assessment Overview & Stats</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </a>
+        <button class="btn btn-success btn-sm" id="goToInterventionsTopBtn" type="button">Go to Intervention Discovery →</button>
+        <button class="btn btn-sm btn-outline-secondary d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#layersPanel">Layers</button>
+      </div>
+    </div>
+    <div class="alert alert-warning rounded-0 mb-0 py-2 small d-none" id="dataWarn" role="status"></div>
+    <div class="ws">
+      <aside class="panel offcanvas-lg offcanvas-start" id="layersPanel" tabindex="-1" aria-label="Control panel">
+        <div class="offcanvas-header d-lg-none"><h2 class="h6 mb-0">Layers</h2><button class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#layersPanel" aria-label="Close"></button></div>
+        <div class="offcanvas-body panel-body">
+          <h3 class="ph">Risk Maps</h3>
+          <div class="sub">Select Risk Layer</div>
+          <div id="riskLayers"></div>
+
+          <h3 class="ph mt-3">Indicator Layers</h3>
+          <div class="sub">Explore Drivers</div>
+          <div id="indGroups"></div>
+
+          <h3 class="ph mt-3">Base Map</h3>
+          <label class="opt"><input type="radio" name="base" value="none"> No Base Map</label>
+          <label class="opt"><input type="radio" name="base" value="normal" checked> Normal Map</label>
+          <label class="opt"><input type="radio" name="base" value="satellite"> Satellite</label>
+          <div class="opacity"><label for="opacity" class="ph d-flex justify-content-between"><span>Layer Opacity</span><span id="opacityVal">100%</span></label>
+            <input type="range" class="form-range" id="opacity" min="10" max="100" value="100"></div>
+
+          <div class="panel-cta mt-4">
+            <button class="btn btn-primary w-100 btn-lg" id="goToInterventionsBtn" type="button">
+              Continue to Interventions →
+            </button>
+          </div>
+        </div>
+      </aside>
+      <div class="map-root">
+        <div id="map"></div>
+        <div class="legend" id="legend"></div>
+        <div class="map-notice d-none" id="mapNotice" role="status"></div>
+        <div class="map-busy d-none" id="mapBusy"><div class="spinner-border spinner-border-sm text-success"></div> Rendering layer…</div>
+        <!-- Hidden legacy triggers -->
+        <div class="d-none" id="mapActions"><button id="recBtn2"></button></div>
+        <div class="d-none" id="recModal"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Visual Guidance Prompt to Scroll Down to Stats Overview -->
+  <div class="text-center py-2 bg-light border-top border-bottom d-none" id="statsScrollGuidance">
+    <a href="#statsSection" class="text-decoration-none fw-semibold text-success small d-inline-flex align-items-center gap-1">
+      <span>⬇️ Scroll down to view Area & Population Hazard Statistics Overview</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+    </a>
+  </div>
+
+  <!-- Risk Profile Statistics Overview (Just below map) -->
+  <section class="section d-none" id="statsSection">
+    <div class="container-xl">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h2 class="section-title mb-0">Assessment Overview & Hazard Statistics</h2>
+          <p class="small text-muted-cr mb-0">Area and population breakdown across risk classes for {{ project.location_name }}.</p>
+        </div>
+        <button class="btn btn-outline-primary btn-sm" id="goToInterventionsBtn2" type="button">Explore Interventions →</button>
+      </div>
+      <div class="row g-3 mb-4" id="overview"></div>
+      <div id="hazardStats"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== TAB 2: INTERVENTION DISCOVERY ==================== -->
+<div class="tab-pane-content d-none" id="tabContent-interventions">
+  <div class="container-xl py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div>
+        <h2 class="h3 fw-bold text-dark mb-1">Intervention Discovery</h2>
+        <p class="text-muted-cr mb-0">
+          Prioritised resilience interventions matched to high-risk areas and primary driving indicators in <strong>{{ project.location_name }}</strong>.
+        </p>
+      </div>
+    </div>
+
+    <!-- Dual Risk Maps: One for Urban Heat Island, One for Waterlogging -->
+    <div class="row g-3 mb-4">
+      <!-- Map 1: Urban Heat Island Risk -->
+      <div class="col-lg-6">
+        <div class="card border rounded-3 overflow-hidden shadow-sm h-100">
+          <div class="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-semibold text-danger" style="font-size:0.9rem;">🔥 Urban Heat Island (UHI) Risk</span>
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Hazard Layer</span>
+          </div>
+          <div style="height: 380px; position: relative;">
+            <div id="mapUhi" style="height: 100%; width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Map 2: Waterlogging Risk -->
+      <div class="col-lg-6">
+        <div class="card border rounded-3 overflow-hidden shadow-sm h-100">
+          <div class="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-semibold text-primary" style="font-size:0.9rem;">💧 Waterlogging & Flood Risk</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Hazard Layer</span>
+          </div>
+          <div style="height: 380px; position: relative;">
+            <div id="mapWater" style="height: 100%; width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discover Intervention Action Bar at the bottom of the maps -->
+    <div class="card p-4 border rounded-3 text-center shadow-sm mb-4 bg-white" id="discoverBar">
+      <button class="btn btn-success btn-lg px-5 shadow-sm fw-bold" id="discoverInterventionsBtn" type="button">
+        🔍 Discover Interventions for High Risk Areas
+      </button>
+      <div class="d-none mt-3" id="discoverProgressBox" style="max-width: 500px; margin: 0 auto;">
+        <div class="d-flex justify-content-between small text-muted mb-1">
+          <span id="discStatus">Analyzing high-risk zones (classes 4 & 5)...</span>
+          <span id="discPct" class="fw-bold text-success">0%</span>
+        </div>
+        <div class="progress" style="height: 10px;">
+          <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="discoverProgressBar" style="width: 0%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations Section (Populated below map upon discovery) -->
+    <div id="interventionsResultsArea" class="d-none">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h3 class="h4 fw-bold text-dark mb-0">Recommended Resilience Interventions</h3>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-success px-3 py-2" id="interventionsCountBadge" style="font-size:0.9rem;">0 Interventions Identified</span>
+          <button class="btn btn-success fw-bold px-3 py-2 shadow-sm d-flex align-items-center gap-2" id="goToPlanningTopBtn" type="button">
+            <span>Go to Planning &rarr;</span>
+          </button>
+        </div>
+      </div>
+      <div class="row g-3" id="recList"></div>
+      <div class="text-center mt-4 pt-3 border-top">
+        <button class="btn btn-success btn-lg px-4 py-2 fw-bold shadow-sm d-inline-flex align-items-center gap-2" id="goToPlanningBottomBtn" type="button">
+          <span>Go to Planning &rarr;</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAB 3: DECISION SUPPORT ==================== -->
+<div class="tab-pane-content d-none" id="tabContent-decision-planner">
+  <div class="container-xl py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div>
+        <h2 class="h3 fw-bold text-dark mb-1">Resilience Decision Support & Capital Allocation</h2>
+        <p class="text-muted-cr mb-0">
+          Optimize municipal capital allocation across high-risk zones, evaluate fixed intervention footprints, and lock adaptation plans for <strong>{{ project.location_name }}</strong>.
+        </p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-primary d-flex align-items-center gap-2 shadow-sm fw-bold px-3 d-none" id="planHeaderDprBtn" type="button">
+          <span>📋 Generate Detailed Project Report</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty State (When no interventions discovered yet) -->
+    <div class="card p-5 border text-center shadow-sm d-none" id="planEmpty">
+      <div class="display-6 mb-3">📍</div>
+      <h3 class="h4 fw-bold text-dark mb-2">No Interventions Discovered Yet</h3>
+      <p class="text-muted mx-auto mb-4" style="max-width: 500px;">
+        Run Stage 2 (Intervention Discovery) first to identify high-risk spatial hotspot clusters and match evidence-based resilience interventions.
+      </p>
+      <div>
+        <button class="btn btn-success btn-lg px-4" id="planGoToModule2Btn" type="button">
+          Go to Stage 2: Discover Interventions →
+        </button>
+      </div>
+    </div>
+
+    <!-- Prepare Planning State (Shown first time user comes to Module 3) -->
+    <div class="card p-5 border text-center shadow-sm d-none" id="planPrepareCard">
+      <div class="display-6 mb-3">📐</div>
+      <h3 class="h4 fw-bold text-dark mb-2">Prepare Adaptation Plan & Decision Support</h3>
+      <p class="text-muted mx-auto mb-4" style="max-width: 540px;">
+        Spatial resilience interventions have been identified for <strong>{{ project.location_name }}</strong>. Click below to enrich exact geodesic footprints, query Earth Engine 2025 population rasters, and generate your interactive municipal investment matrix.
+      </p>
+      <div>
+        <button class="btn btn-success btn-lg px-4 py-2 fw-bold shadow-sm d-inline-flex align-items-center gap-2" id="preparePlanBtn" type="button">
+          <span>⚡ Prepare Adaptation Plan</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="card p-5 border text-center shadow-sm d-none" id="planLoading">
+      <div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+      <h4 class="h5 fw-bold text-dark mb-1">Enriching Intervention Polygons & Demographics</h4>
+      <p class="text-muted small mb-0">
+        Calculating exact WGS84 geodesic polygon surface areas and querying Earth Engine 2025 population rasters in a single batched pass...
+      </p>
+    </div>
+
+    <!-- Main Content Area -->
+    <div id="planContent" class="d-none">
+      <!-- 1. Top Stat Cards (Candidate Baselines & Live Selected Totals) -->
+      <div class="row g-3 mb-4">
+        <!-- Card 1: Total Polygon Area -->
+        <div class="col-6 col-lg-2">
+          <div class="card border rounded-3 p-3 shadow-sm h-100 bg-white">
+            <span class="text-muted small fw-semibold d-block text-truncate">TOTAL POLYGON AREA</span>
+            <div class="h5 fw-bold text-dark mb-0 font-monospace mt-1" id="kpiTotalPolyArea">0.0 ha</div>
+            <div class="text-muted small mt-1" style="font-size:0.7rem;">Gross across 10 zones</div>
+          </div>
+        </div>
+
+        <!-- Card 2: Total Est. Intervention Area -->
+        <div class="col-6 col-lg-2">
+          <div class="card border rounded-3 p-3 shadow-sm h-100 bg-white">
+            <span class="text-muted small fw-semibold d-block text-truncate">EST. INTERVENTION AREA</span>
+            <div class="h5 fw-bold text-dark mb-0 font-monospace mt-1" id="kpiTotalEstArea">0.0 ha</div>
+            <div class="text-muted small mt-1" style="font-size:0.7rem;">Treatable zone footprint</div>
+          </div>
+        </div>
+
+        <!-- Card 3: Total Population Across Zones -->
+        <div class="col-6 col-lg-2">
+          <div class="card border rounded-3 p-3 shadow-sm h-100 bg-white">
+            <span class="text-muted small fw-semibold d-block text-truncate">TOTAL ZONE RESIDENTS</span>
+            <div class="h5 fw-bold text-dark mb-0 font-monospace mt-1" id="kpiTotalPop">0 people</div>
+            <div class="text-muted small mt-1" style="font-size:0.7rem;">WorldPop 2025 baseline</div>
+          </div>
+        </div>
+
+        <!-- Card 4: Selected Implementation Cost -->
+        <div class="col-6 col-lg-2">
+          <div class="card border border-success-subtle rounded-3 p-3 shadow-sm h-100 bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-success small fw-bold d-block text-truncate">SELECTED CAPEX</span>
+              <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace" id="kpiSelectedCount">0</span>
+            </div>
+            <div class="h5 fw-bold text-dark mb-0 font-monospace mt-1" id="kpiSelectedCapex">₹0</div>
+            <div class="text-muted small mt-1" style="font-size:0.7rem;">Total implementation</div>
+          </div>
+        </div>
+
+        <!-- Card 5: Selected Annual Maintenance -->
+        <div class="col-6 col-lg-2">
+          <div class="card border border-info-subtle rounded-3 p-3 shadow-sm h-100 bg-white">
+            <span class="text-primary small fw-bold d-block text-truncate">ANNUAL OPEX</span>
+            <div class="h5 fw-bold text-dark mb-0 font-monospace mt-1" id="kpiSelectedOpex">₹0 / yr</div>
+            <div class="text-muted small mt-1" style="font-size:0.7rem;" id="kpiTco">5-Yr TCO: ₹0</div>
+          </div>
+        </div>
+
+        <!-- Card 6: Selected People Impacted -->
+        <div class="col-6 col-lg-2">
+          <div class="card border border-warning-subtle rounded-3 p-3 shadow-sm h-100 bg-white">
+            <span class="text-dark small fw-bold d-block text-truncate">PEOPLE BENEFITED</span>
+            <div class="h5 fw-bold text-success mb-0 font-monospace mt-1" id="kpiSelectedPop">0 people</div>
+            <div class="text-muted small mt-1" style="font-size:0.7rem;" id="kpiCostPerson">₹0 / person</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Target Budget Control & Exhaustion Progress Bar -->
+      <div class="card border rounded-3 shadow-sm mb-4 bg-white">
+        <div class="card-body p-4">
+          <div class="row g-4 align-items-center">
+            <!-- Left: Target Budget Input & Centered Slider -->
+            <div class="col-lg-6 border-end-lg">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label fw-bold text-dark small mb-0">💰 Target Available Budget (INR)</label>
+                <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold font-monospace" id="planBudgetDisplay">₹25.0 Lakh</span>
+              </div>
+              <div class="input-group input-group-sm mb-2">
+                <span class="input-group-text bg-light text-muted">₹</span>
+                <input type="number" class="form-control font-monospace fw-bold" id="planBudgetInput" value="2500000" step="50000" min="100000" max="200000000">
+              </div>
+
+              <!-- Quick Budget Chips -->
+              <div class="d-flex flex-wrap gap-1 mb-3">
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size:0.72rem;" data-budget-chip="1500000">₹15L</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size:0.72rem;" data-budget-chip="2500000">₹25L</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size:0.72rem;" data-budget-chip="5000000">₹50L</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size:0.72rem;" data-budget-chip="10000000">₹1 Cr</button>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size:0.72rem;" data-budget-chip="20000000">₹2 Cr</button>
+              </div>
+
+              <!-- Centered Adjustment Slider (0.5x to 2.0x of entered budget) -->
+              <div class="mb-1">
+                <div class="d-flex justify-content-between text-muted small mb-1" style="font-size: 0.72rem;">
+                  <span id="sliderMinLabel">0.5x (₹12.5L)</span>
+                  <span id="sliderCenterLabel" class="fw-bold text-success">1.0x (Entered Budget)</span>
+                  <span id="sliderMaxLabel">2.0x (₹50.0L)</span>
+                </div>
+                <input type="range" class="form-range" id="planBudgetSlider" min="1250000" max="5000000" step="25000" value="2500000">
+              </div>
+            </div>
+
+            <!-- Right: Budget Exhaustion Bar & Quick Optimization -->
+            <div class="col-lg-6">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-bold text-dark">📊 Budget Exhaustion</span>
+                <span class="small font-monospace fw-bold" id="planExhaustionRatio">₹0 / ₹25.0 Lakh (0%)</span>
+              </div>
+              <div class="progress mb-2" style="height: 12px; border-radius: 6px;">
+                <div class="progress-bar bg-success progress-bar-striped" id="planBudgetExhaustionBar" style="width: 0%;"></div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small text-muted" id="planExhaustionStatus">₹25.0 Lakh unallocated</span>
+                <span class="small fw-bold" id="planExhaustionAlert"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Toolbar: Sorting, Hazard Filter & Actions -->
+        <div class="card-footer bg-light px-4 py-2 d-flex flex-wrap justify-content-between align-items-center gap-2 border-top">
+          <!-- Sort Dropdown -->
+          <div class="d-flex align-items-center gap-2">
+            <span class="small text-dark fw-bold text-nowrap">Sort Table:</span>
+            <select class="form-select form-select-sm" id="planTableSortSelect" style="width: auto; min-width: 250px;">
+              <option value="pop_desc" selected>👥 Number of People Impacted (High to Low)</option>
+              <option value="cost_asc">💰 Implementation Cost (Low to High)</option>
+              <option value="maint_asc">🛠️ Maintenance Cost / Year (Low to High)</option>
+              <option value="complexity_asc">⚙️ Technical Complexity (Low to High)</option>
+              <option value="lifespan_desc">⏳ Lifespan (High to Low)</option>
+            </select>
+          </div>
+
+          <!-- Hazard Filter & Selection Buttons -->
+          <div class="d-flex align-items-center gap-2">
+            <span class="small text-muted me-1 fw-semibold">Filter:</span>
+            <button type="button" class="btn btn-sm btn-outline-dark active btn-dark py-1 px-2" data-hazard-filter="all">All (10)</button>
+            <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" data-hazard-filter="uhi">🔥 UHI (5)</button>
+            <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" data-hazard-filter="waterlogging">💧 Flood (5)</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 ms-2" id="planSelectAllBtn">Select All</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" id="planClearBtn">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Sortable Comparison Table of 10 Interventions -->
+      <div class="card border rounded-3 shadow-sm overflow-hidden mb-4 bg-white">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+          <div>
+            <h4 class="h6 fw-bold text-dark mb-0">Interventions Comparison Matrix</h4>
+            <div class="text-muted small" style="font-size:0.75rem;">Select candidate interventions with checkboxes to balance your resilience allocation</div>
+          </div>
+          <span class="badge bg-light text-secondary border small">10 Verified Hotspots</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0" style="min-width: 980px;">
+            <thead class="table-light small text-uppercase text-muted" style="font-size:0.72rem; letter-spacing:0.03em;">
+              <tr>
+                <th style="width: 44px;" class="text-center">Select</th>
+                <th>Intervention & Target Surface</th>
+                <th class="text-end">People Impacted</th>
+                <th class="text-end">Unit Setup Cost (₹/m²)</th>
+                <th class="text-end">Unit Maint. Cost (₹/m²/yr)</th>
+                <th class="text-end">Total Implementation Cost (INR)</th>
+                <th class="text-end">Total Annual Maint. (INR/yr)</th>
+                <th class="text-center">Technical Complexity</th>
+                <th class="text-center">Lifespan</th>
+                <th>Expected Impact</th>
+              </tr>
+            </thead>
+            <tbody id="planTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Locked Plan Active Alert Banner (When plan has been committed) -->
+      <div class="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-3 shadow-sm border-success d-none mb-4" id="planLockedAlert" role="alert">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: 1.5rem;">🔒</span>
+          <div>
+            <div class="fw-bold text-success" id="planLockedTitle">Adaptation Plan Finalized & Locked</div>
+            <div class="small text-dark" id="planLockedText">Committed interventions and baselines established in Cloud SQL.</div>
+          </div>
+        </div>
+        <button class="btn btn-success btn-sm px-3 shadow-sm fw-semibold" id="goToMonitoringFromLockedBtn" type="button">
+          Proceed to Stage 4: Tracking & Impact →
+        </button>
+      </div>
+
+      <!-- Grounded AI Executive Decision Brief Card (Optional Expandable) -->
+      <div class="card border rounded-3 shadow-sm mb-4 bg-white d-none" id="planAiBriefCard">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Grounded Reasoning</span>
+            <h5 class="h6 fw-bold text-dark mb-0">🤖 AI Portfolio Phasing & Executive Decision Brief</h5>
+          </div>
+          <span class="badge bg-light text-muted border small">Zero Hallucination Guaranteed</span>
+        </div>
+        <div class="card-body p-4" id="planAiBriefContainer"></div>
+      </div>
+
+      <!-- 4. Two Primary Action Buttons -->
+      <div class="card border rounded-3 shadow-sm mb-4 bg-white">
+        <div class="card-body p-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <h5 class="h6 fw-bold text-dark mb-1">Finalize Resilience Decisions</h5>
+              <p class="text-muted small mb-0">
+                Lock your selected intervention portfolio into the municipal registry or export a comprehensive Detailed Project Report (DPR).
+              </p>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <button class="btn btn-outline-success btn-sm px-3 fw-semibold shadow-sm" id="planAiBriefBtn" type="button">
+                🤖 AI Phasing Brief
+              </button>
+              <button class="btn btn-primary fw-bold px-4 py-2 shadow-sm d-flex align-items-center gap-2" id="planGenerateDprBtn" type="button">
+                <span>📋 Generate Detailed Project Report</span>
+              </button>
+              <button class="btn btn-success fw-bold px-4 py-2 shadow-sm d-flex align-items-center gap-2" id="planLockBtn" type="button">
+                <span>🔒 Lock Plan & Send to Tracking & Impact</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Print-Ready Stakeholder Decision Report Modal -->
+<div class="modal fade" id="planReportModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="margin-top: 4.5rem; max-width: 92vw;">
+    <div class="modal-content shadow-lg border-0">
+      <div class="modal-header d-flex justify-content-between align-items-center py-2 px-3" style="position: sticky; top: 0; z-index: 10; background: #ffffff !important; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
+        <h5 class="modal-title fw-bold text-dark small mb-0">Executive Decision Dossier Preview</h5>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm fw-semibold d-flex align-items-center gap-1" id="planPrintReportBtn">
+            <span>🖨️ Download / Print Report (PDF)</span>
+          </button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="modal-body p-4" id="planReportModalBody" style="background: #fafafa;">
+        <!-- Rendered dynamically by planner.js -->
+      </div>
+      <div class="modal-footer bg-light py-2">
+        <span class="text-muted small me-auto">Ready for municipal submission or stakeholder evaluation.</span>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Side-by-Side Comparison Modal -->
+<div class="modal fade" id="planCompareModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title fw-bold">Side-by-Side Intervention Evaluation</h5>
+          <div class="text-muted small">Head-to-head comparison across financial, spatial, and impact benchmarks</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4" id="planCompareContainer"></div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close Comparison</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAB 4: TRACKING & IMPACT ==================== -->
+<div class="tab-pane-content d-none" id="tabContent-monitoring">
+  <div class="container-xl py-4">
+
+    <!-- 1. Empty / Unlocked State Guard (when user visits before finalizing plan) -->
+    <div class="card p-5 border text-center shadow-sm d-none" id="trackingEmptyCard">
+      <div class="display-6 mb-3">🔒</div>
+      <h3 class="h4 fw-bold text-dark mb-2">Adaptation Plan Not Finalized Yet</h3>
+      <p class="text-muted mx-auto mb-4" style="max-width: 540px;">
+        Stage 4 (Tracking & Impact) requires a finalized and committed adaptation portfolio from Stage 3 (Decision Support). Once you select your intervention portfolio and click <strong>"Lock Plan & Send to Tracking & Impact"</strong>, this workspace will activate live satellite observation and post-intervention impact verification.
+      </p>
+      <div>
+        <button class="btn btn-success btn-lg px-4" id="trackingGoToPlannerBtn" type="button">
+          ← Go to Stage 3: Decision Support
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Loading State -->
+    <div class="card p-5 border text-center shadow-sm d-none" id="trackingLoading">
+      <div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+      <h4 class="h5 fw-bold text-dark mb-1">Loading Operational Satellite Tracking</h4>
+      <p class="text-muted small mb-0">Querying Earth Engine surveillance layers and committed intervention portfolio...</p>
+    </div>
+
+    <!-- 3. Active Tracking Workspace -->
+    <div id="trackingContent" class="d-none">
+      <!-- Header Banner & Hazard Toggle -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Stage 4: Active Observation</span>
+            <span class="badge bg-light text-secondary border font-monospace" id="trackPlanSummaryBadge">Locked Portfolio</span>
+          </div>
+          <h2 class="h3 fw-bold text-dark mb-1">Post-Implementation Satellite Tracking & Impact</h2>
+          <p class="text-muted-cr small mb-0">
+            Multi-temporal remote sensing surveillance benchmarked to 2024–2025 baselines for <strong>{{ project.location_name }}</strong>.
+          </p>
+        </div>
+
+        <!-- Hazard Toggle Pills -->
+        <div class="d-flex align-items-center gap-2">
+          <span class="small text-muted fw-semibold">Hazard View:</span>
+          <button type="button" class="btn btn-sm btn-danger active fw-semibold" id="trackHzUhiBtn">🔥 Urban Heat Island (UHI)</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="trackHzWaterBtn">💧 Waterlogging</button>
+        </div>
+      </div>
+
+      <!-- Side-by-Side Synchronized Comparison Maps -->
+      <div class="track-maps-grid mb-4">
+        <!-- Left Map: Baseline (2024–2025) -->
+        <div class="card border rounded-3 shadow-sm h-100 bg-white track-map-card">
+          <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center track-map-header">
+            <div class="pe-2 overflow-hidden text-truncate">
+              <h5 class="h6 fw-bold text-dark mb-0 text-truncate">Baseline Assessment (2024–2025)</h5>
+              <div class="text-muted text-truncate" style="font-size:0.75rem;">Fixed reference benchmark · Committed sites</div>
+            </div>
+            <div class="flex-shrink-0">
+              <span class="badge bg-dark text-white font-monospace text-nowrap">2024–2025 Baseline</span>
+            </div>
+          </div>
+          <div class="card-body p-2">
+            <div id="trackMapBaseline" style="height: 440px; width: 100%; border-radius: 6px; border: 1.5px solid #000000; overflow: hidden; background: #e2e8f0;"></div>
+          </div>
+          <div class="card-footer bg-light py-2 px-3 d-flex justify-content-between align-items-center gap-2 track-map-footer" style="font-size: 0.74rem;">
+            <span class="text-muted text-truncate">■ Black Border: Geodesic Footprint</span>
+            <span class="badge bg-secondary-subtle text-secondary border text-nowrap flex-shrink-0">Class 1 to 5</span>
+          </div>
+        </div>
+
+        <!-- Right Map: Live Monitoring (Latest Satellite Data) -->
+        <div class="card border rounded-3 shadow-sm h-100 bg-white track-map-card">
+          <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center track-map-header">
+            <div class="pe-2 overflow-hidden text-truncate">
+              <h5 class="h6 fw-bold text-dark mb-0 text-truncate">Live Satellite Observation</h5>
+              <div class="text-muted text-truncate" style="font-size:0.75rem;">Rolling 60-day Sentinel-2 / Landsat</div>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+              <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace text-nowrap" id="trackLiveTimestamp" style="font-size: 0.72rem;">🛰️ Synced: Today</span>
+              <button type="button" class="btn btn-xs btn-outline-secondary py-1 px-2 text-nowrap fw-medium" id="trackRefreshLiveBtn" title="Sync latest satellite data">🔄 Refresh</button>
+            </div>
+          </div>
+          <div class="card-body p-2">
+            <div id="trackMapLive" style="height: 440px; width: 100%; border-radius: 6px; border: 1.5px solid #000000; overflow: hidden; background: #e2e8f0;"></div>
+          </div>
+          <div class="card-footer bg-light py-2 px-3 d-flex justify-content-between align-items-center gap-2 track-map-footer" style="font-size: 0.74rem;">
+            <span class="text-muted text-truncate">Rolling 60-day observation window</span>
+            <span class="badge bg-success text-white text-nowrap flex-shrink-0">Dynamic Ingestion</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post-Intervention Impact Assessment Section -->
+      <div class="card border rounded-3 shadow-sm mb-4 bg-white" id="trackImpactSection">
+        <div class="card-header bg-white py-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h4 class="h6 fw-bold text-dark mb-0">Quantitative Post-Intervention Impact Verification</h4>
+            <div class="text-muted small" style="font-size:0.75rem;">Zonal comparison inside committed footprints between 2024–2025 baseline and latest satellite indicators</div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small" id="trackImpactCalcTime" style="font-size:0.72rem;"></span>
+            <button class="btn btn-primary btn-sm fw-bold px-3 shadow-sm d-flex align-items-center gap-2" id="trackCalculateImpactBtn" type="button">
+              <span>⚡ Calculate Post-Intervention Impact</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <!-- 4 Impact KPI Cards -->
+          <div class="row g-3 mb-4" id="trackImpactCards">
+            <!-- Card 1: Total Intervened Area -->
+            <div class="col-6 col-lg-3">
+              <div class="card border rounded-3 p-3 shadow-sm h-100 bg-light-subtle">
+                <span class="text-muted small fw-semibold d-block text-truncate">TOTAL INTERVENED FOOTPRINT</span>
+                <div class="h5 fw-bold text-success mb-0 font-monospace mt-1" id="trackKpiArea">0.0 ha</div>
+                <div class="text-muted small mt-1" style="font-size:0.7rem;">Scaled by committed action %</div>
+              </div>
+            </div>
+
+            <!-- Card 2: Beneficiaries Protected -->
+            <div class="col-6 col-lg-3">
+              <div class="card border rounded-3 p-3 shadow-sm h-100 bg-light-subtle">
+                <span class="text-muted small fw-semibold d-block text-truncate">BENEFICIARIES PROTECTED</span>
+                <div class="h5 fw-bold text-dark mb-0 font-monospace mt-1" id="trackKpiPop">0 citizens</div>
+                <div class="text-muted small mt-1" style="font-size:0.7rem;">WorldPop verified count</div>
+              </div>
+            </div>
+
+            <!-- Card 3: Thermal / Cooling Benefit -->
+            <div class="col-6 col-lg-3">
+              <div class="card border rounded-3 p-3 shadow-sm h-100 bg-light-subtle">
+                <span class="text-danger small fw-bold d-block text-truncate">THERMAL / COOLING DELTA</span>
+                <div class="h5 fw-bold text-dark mb-0 font-monospace mt-1" id="trackKpiCooling">-0.0°C Surface</div>
+                <div class="text-muted small mt-1" style="font-size:0.7rem;">LST reduction & NDVI greening</div>
+              </div>
+            </div>
+
+            <!-- Card 4: Runoff & Flood Mitigation -->
+            <div class="col-6 col-lg-3">
+              <div class="card border rounded-3 p-3 shadow-sm h-100 bg-light-subtle">
+                <span class="text-primary small fw-bold d-block text-truncate">RUNOFF ATTENUATION</span>
+                <div class="h5 fw-bold text-dark mb-0 font-monospace mt-1" id="trackKpiWater">-0% Peak Runoff</div>
+                <div class="text-muted small mt-1" style="font-size:0.7rem;">Drainage & waterlogging buffer</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone-by-Zone Before & After Table -->
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle mb-0 small">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 70px;">Zone</th>
+                  <th>Intervention & Target Surface</th>
+                  <th style="width: 80px;">Hazard</th>
+                  <th class="text-center" style="width: 130px;">Committed Scale</th>
+                  <th>Baseline (2024–2025)</th>
+                  <th>Latest Satellite Observation</th>
+                  <th>Measured Indicator Delta</th>
+                  <th class="text-center" style="width: 150px;">Verification Status</th>
+                </tr>
+              </thead>
+              <tbody id="trackImpactTableBody">
+                <tr>
+                  <td colspan="8" class="text-center py-4 text-muted">
+                    Click <strong>"⚡ Calculate Post-Intervention Impact"</strong> above to evaluate quantitative zonal deltas across committed sites.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden dummy button to satisfy analysis.js callbacks -->
+<div class="d-none">
+  <button id="recBtn"></button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/map.js', v=build_id) }}"></script>
+<script src="{{ url_for('static', filename='js/recommendations.js', v=build_id) }}"></script>
+<script src="{{ url_for('static', filename='js/analysis.js', v=build_id) }}"></script>
+<script src="{{ url_for('static', filename='js/planner.js', v=build_id) }}"></script>
+<script src="{{ url_for('static', filename='js/tracking.js', v=build_id) }}"></script>
+
+<script>
+  (function() {
+    const HZ_COLOR = { uhi: '#EA580C', waterlogging: '#1D4ED8' };
+    const tabs = document.querySelectorAll('.ws-nav-tab');
+    const panes = {
+      'risk-profile': document.getElementById('tabContent-risk-profile'),
+      'interventions': document.getElementById('tabContent-interventions'),
+      'decision-planner': document.getElementById('tabContent-decision-planner'),
+      'monitoring': document.getElementById('tabContent-monitoring')
+    };
+
+    let mapUhi = null;
+    let mapWater = null;
+    let cachedRecs = window.CR_PROJECT.interventions_data || [];
+    window.CR_CACHED_RECS = cachedRecs;
+
+    // 1. Tab Switching Logic
+    function switchTab(target) {
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+      Object.entries(panes).forEach(([k, p]) => {
+        if (p) p.classList.toggle('d-none', k !== target);
+      });
+      window.scrollTo(0, 0);
+
+      if (target === 'risk-profile') {
+        if (window.CR_RISK_MAP) {
+          setTimeout(() => {
+            window.CR_RISK_MAP.resize();
+            window.CR_RISK_MAP.reset();
+          }, 120);
+        }
+      } else if (target === 'interventions') {
+        initInterventionMaps();
+      } else if (target === 'decision-planner') {
+        if (window.CRPlanner) {
+          window.CRPlanner.init(window.CR_PROJECT.id);
+          window.CRPlanner.load();
+        }
+      } else if (target === 'monitoring') {
+        if (window.CRTracking) {
+          window.CRTracking.init(window.CR_PROJECT.id);
+          window.CRTracking.load();
+          setTimeout(() => {
+            if (window.CRTracking.resizeMaps) window.CRTracking.resizeMaps();
+          }, 150);
+        }
+      }
+    }
+
+    tabs.forEach(t => t.onclick = () => switchTab(t.dataset.tab));
+
+    const toInterventions = () => switchTab('interventions');
+    const toPlanning = () => switchTab('decision-planner');
+
+    if (document.getElementById('goToInterventionsBtn')) document.getElementById('goToInterventionsBtn').onclick = toInterventions;
+    if (document.getElementById('goToInterventionsTopBtn')) document.getElementById('goToInterventionsTopBtn').onclick = toInterventions;
+    if (document.getElementById('goToInterventionsBtn2')) document.getElementById('goToInterventionsBtn2').onclick = toInterventions;
+    if (document.getElementById('planGoToModule2Btn')) document.getElementById('planGoToModule2Btn').onclick = toInterventions;
+    if (document.getElementById('goToPlanningTopBtn')) document.getElementById('goToPlanningTopBtn').onclick = toPlanning;
+    if (document.getElementById('goToPlanningBottomBtn')) document.getElementById('goToPlanningBottomBtn').onclick = toPlanning;
+    if (document.getElementById('goToMonitoringFromLockedBtn')) document.getElementById('goToMonitoringFromLockedBtn').onclick = () => switchTab('monitoring');
+    if (document.getElementById('trackingGoToPlannerBtn')) document.getElementById('trackingGoToPlannerBtn').onclick = toPlanning;
+    if (document.getElementById('preparePlanBtn')) {
+      document.getElementById('preparePlanBtn').onclick = () => {
+        if (window.CRPlanner) window.CRPlanner.preparePlan();
+      };
+    }
+
+    // 2. Initialize Two Maps in Interventions Tab (UHI + Waterlogging)
+    async function initInterventionMaps() {
+      if (!mapUhi) {
+        mapUhi = new CRMap('mapUhi');
+      }
+      if (!mapWater) {
+        mapWater = new CRMap('mapWater');
+      }
+
+      setTimeout(async () => {
+        mapUhi.resize();
+        mapWater.resize();
+
+        // Load bounds and AOI
+        const aoi = window.CR_AOI_GEOJSON || (window.CR_PROJECT.assessment_data && window.CR_PROJECT.assessment_data.aoi);
+        const bounds = window.CR_AOI_BOUNDS || (window.CR_PROJECT.assessment_data && window.CR_PROJECT.assessment_data.bounds);
+        if (aoi && bounds) {
+          mapUhi.showAOI(aoi, bounds);
+          mapWater.showAOI(aoi, bounds);
+        }
+
+        // Overlay UHI Risk on Map 1
+        try {
+          const uhiRes = await fetch('/api/layers/risk_uhi/tiles?project_id=' + window.CR_PROJECT.id);
+          const uhiData = await uhiRes.json();
+          if (uhiData.overlay) {
+            mapUhi.setOverlay(uhiData.overlay, uhiData.bounds);
+          } else if (uhiData.url) {
+            mapUhi.setLayer(uhiData.url);
+          }
+        } catch (e) {
+          console.warn('[interventions] UHI layer not ready:', e);
+        }
+
+        // Overlay Waterlogging Risk on Map 2
+        try {
+          const waterRes = await fetch('/api/layers/risk_waterlogging/tiles?project_id=' + window.CR_PROJECT.id);
+          const waterData = await waterRes.json();
+          if (waterData.overlay) {
+            mapWater.setOverlay(waterData.overlay, waterData.bounds);
+          } else if (waterData.url) {
+            mapWater.setLayer(waterData.url);
+          }
+        } catch (e) {
+          console.warn('[interventions] Water layer not ready:', e);
+        }
+
+        // Show pinned markers if already discovered
+        if (cachedRecs && cachedRecs.length) {
+          showPinsOnBothMaps(cachedRecs);
+        }
+      }, 250);
+    }
+
+    function showPinsOnBothMaps(recs) {
+      const uhiRecs = recs.filter(r => r.hazard === 'uhi');
+      const waterRecs = recs.filter(r => r.hazard === 'waterlogging');
+
+      if (mapUhi) {
+        mapUhi.setPolygonsAndPins(uhiRecs, '#EA580C', id => {
+          mapUhi.highlight(id);
+          Recs.flash(id);
+          const r = recs.find(x => x.id === id);
+          if (r) mapUhi.focusPin(id, Recs.popupHtml(r));
+        });
+      }
+      if (mapWater) {
+        mapWater.setPolygonsAndPins(waterRecs, '#1D4ED8', id => {
+          mapWater.highlight(id);
+          Recs.flash(id);
+          const r = recs.find(x => x.id === id);
+          if (r) mapWater.focusPin(id, Recs.popupHtml(r));
+        });
+      }
+    }
+
+    // 3. Discover Interventions with Progress Bar
+    const discBtn = document.getElementById('discoverInterventionsBtn');
+    const progBox = document.getElementById('discoverProgressBox');
+    const progBar = document.getElementById('discoverProgressBar');
+    const discPct = document.getElementById('discPct');
+    const discStatus = document.getElementById('discStatus');
+    const resultsArea = document.getElementById('interventionsResultsArea');
+    const recList = document.getElementById('recList');
+    const countBadge = document.getElementById('interventionsCountBadge');
+
+    if (cachedRecs && cachedRecs.length && discBtn) {
+      discBtn.textContent = '🔄 Re-evaluate Interventions';
+    }
+
+    async function runDiscoverInterventions() {
+      discBtn.disabled = true;
+      progBox.classList.remove('d-none');
+      progBar.style.width = '20%';
+      discPct.textContent = '20%';
+      discStatus.textContent = '1. Extracting top 5 high-vulnerability polygons & zonal indicators...';
+
+      try {
+        // Trigger recommendations calculation on server (pass refresh if re-evaluating)
+        const isReval = cachedRecs && cachedRecs.length > 0;
+        const pid = window.CR_PROJECT ? window.CR_PROJECT.id : '';
+        const url = isReval ? `/api/recommendations?refresh=1&project_id=${pid}` : `/api/recommendations?project_id=${pid}`;
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project_id: pid })
+        });
+
+        // Poll /api/recommendations/status until done
+        for (;;) {
+          await new Promise(r => setTimeout(r, 1200));
+          const stRes = await fetch(`/api/recommendations/status?project_id=${pid}`);
+          const st = await stRes.json();
+          if (st.state === 'failed') throw new Error(st.error || 'Discovery failed');
+          const p = Math.max(20, st.progress || 25);
+          progBar.style.width = p + '%';
+          discPct.textContent = p + '%';
+          if (p < 55) {
+            discStatus.textContent = '1. Extracting top 5 high-vulnerability polygons & zonal indicators...';
+          } else if (p < 95) {
+            discStatus.textContent = '2. Matching site-specific interventions & benchmarks...';
+          } else {
+            discStatus.textContent = '3. Finalizing spatial polygons and persisting to Cloud SQL...';
+          }
+          if (st.state === 'done') break;
+        }
+
+        progBar.style.width = '100%';
+        discPct.textContent = '100%';
+        discStatus.textContent = 'Spatial-visual resilience analysis complete!';
+
+        const res = await fetch(`/api/recommendations/result?project_id=${pid}`);
+        const d = await res.json();
+        const recs = d.recommendations || [];
+        cachedRecs = recs;
+        window.CR_CACHED_RECS = recs;
+        if (window.CR_PROJECT) {
+          window.CR_PROJECT.interventions_data = recs;
+        }
+        if (window.CRPlanner) {
+          window.CRPlanner.items = recs;
+          window.CRPlanner.isEnriched = false;
+        }
+
+        // Proactively synchronize discovered interventions with project store
+        if (pid && recs.length > 0) {
+          fetch(`/api/decision_planner/enrich?project_id=${pid}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: pid, interventions: recs })
+          }).catch(e => console.warn('[workspace] Background sync notice:', e));
+        }
+
+        setTimeout(() => {
+          progBox.classList.add('d-none');
+          discBtn.disabled = false;
+          discBtn.textContent = '🔄 Re-evaluate Interventions';
+          resultsArea.classList.remove('d-none');
+          countBadge.textContent = recs.length + ' Interventions Identified';
+
+          const handleLocate = (ids, primaryRec) => {
+            const hazard = primaryRec ? primaryRec.hazard : 'uhi';
+            if (hazard === 'uhi' && mapUhi) {
+              document.getElementById('mapUhi').scrollIntoView({ behavior: 'smooth' });
+              setTimeout(() => mapUhi.focusMultiplePins(ids, Recs.popupHtml(primaryRec)), 300);
+            } else if (mapWater) {
+              document.getElementById('mapWater').scrollIntoView({ behavior: 'smooth' });
+              setTimeout(() => mapWater.focusMultiplePins(ids, Recs.popupHtml(primaryRec)), 300);
+            }
+          };
+
+          // Render Unified Grouped Cards
+          Recs.render(recList, recs, handleLocate);
+
+          // Pinned Polygons & Markers on Both Maps
+          showPinsOnBothMaps(recs);
+
+          // Scroll to results
+          resultsArea.scrollIntoView({ behavior: 'smooth' });
+        }, 500);
+
+      } catch (err) {
+        progBox.classList.add('d-none');
+        discBtn.disabled = false;
+        alert('Could not discover interventions: ' + (err.message || 'Please make sure the Risk Assessment in Tab 1 has completed first.'));
+      }
+    }
+
+    discBtn.onclick = runDiscoverInterventions;
+
+    // Render cached interventions if already available
+    if (cachedRecs && cachedRecs.length) {
+      resultsArea.classList.remove('d-none');
+      countBadge.textContent = cachedRecs.length + ' Interventions Identified';
+      const handleLocateCached = (ids, primaryRec) => {
+        const hazard = primaryRec ? primaryRec.hazard : 'uhi';
+        if (hazard === 'uhi' && mapUhi) {
+          document.getElementById('mapUhi').scrollIntoView({ behavior: 'smooth' });
+          setTimeout(() => mapUhi.focusMultiplePins(ids, Recs.popupHtml(primaryRec)), 300);
+        } else if (mapWater) {
+          document.getElementById('mapWater').scrollIntoView({ behavior: 'smooth' });
+          setTimeout(() => mapWater.focusMultiplePins(ids, Recs.popupHtml(primaryRec)), 300);
+        }
+      };
+      Recs.render(recList, cachedRecs, handleLocateCached);
+    }
+
+    // 4. Hook when Assessment finishes to persist bounds and data
+    window.addEventListener('cr:assessment-done', (e) => {
+      document.getElementById('projectLaunchCard').classList.add('d-none');
+      if (document.getElementById('statsScrollGuidance')) {
+        document.getElementById('statsScrollGuidance').classList.remove('d-none');
+      }
+      if (e.detail && e.detail.bounds) {
+        window.CR_AOI_BOUNDS = e.detail.bounds;
+        window.CR_AOI_GEOJSON = e.detail.aoi;
+      }
+    });
+
+    if (window.CR_PROJECT && window.CR_PROJECT.has_assessment) {
+      if (document.getElementById('statsScrollGuidance')) {
+        document.getElementById('statsScrollGuidance').classList.remove('d-none');
+      }
+    }
+
+    // 5. Decision Planner: Report generation with progress displayed in button
+    const rptBtn = document.getElementById('reportBtn');
+    const rptStatus = document.getElementById('reportStatus');
+    if (rptBtn) {
+      rptBtn.onclick = async () => {
+        if (rptBtn.disabled) return;
+        rptBtn.disabled = true;
+        rptBtn.classList.add('btn-progress');
+        rptBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Compiling Report… 5%';
+        rptBtn.style.setProperty('--p', '5%');
+        if (rptStatus) rptStatus.textContent = 'Initializing report compilation…';
+
+        try {
+          const startRes = await fetch('/api/report/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: window.CR_PROJECT.id })
+          });
+          const startData = await startRes.json();
+          if (!startRes.ok) throw new Error(startData.error || 'Failed to start report generation');
+
+          for (;;) {
+            await new Promise(r => setTimeout(r, 800));
+            const stRes = await fetch('/api/report/status?project_id=' + window.CR_PROJECT.id);
+            const st = await stRes.json();
+            if (st.state === 'failed') throw new Error(st.error || 'Report generation failed');
+
+            const p = Math.max(10, st.progress || 10);
+            rptBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> Compiling Report… ${p}%`;
+            rptBtn.style.setProperty('--p', p + '%');
+            if (rptStatus) {
+              if (p < 40) rptStatus.textContent = 'Compiling spatial hazard metrics (' + p + '%)…';
+              else if (p < 80) rptStatus.textContent = 'Rendering satellite risk maps & indicators (' + p + '%)…';
+              else rptStatus.textContent = 'Formatting publication decision dossier (' + p + '%)…';
+            }
+
+            if (st.state === 'done') break;
+          }
+
+          rptBtn.innerHTML = '✅ Report Ready! Downloading…';
+          rptBtn.style.setProperty('--p', '100%');
+          if (rptStatus) rptStatus.textContent = 'Download starting…';
+
+          // Trigger download
+          const dlLink = document.createElement('a');
+          dlLink.href = '/api/report/download?project_id=' + window.CR_PROJECT.id;
+          const locName = (window.CR_PROJECT.location_name || 'Resilience').replace(/[\\/*?:"<>|]/g, '').trim();
+          dlLink.download = `ClimateReady Resilience Report - ${locName}.pdf`;
+          document.body.appendChild(dlLink);
+          dlLink.click();
+          dlLink.remove();
+
+          setTimeout(() => {
+            rptBtn.disabled = false;
+            rptBtn.classList.remove('btn-progress');
+            rptBtn.style.removeProperty('--p');
+            rptBtn.innerHTML = '📥 Download Full Project Report (PDF)';
+            if (rptStatus) rptStatus.textContent = 'Ready to compile';
+          }, 3500);
+
+        } catch (err) {
+          console.error('[report]', err);
+          rptBtn.disabled = false;
+          rptBtn.classList.remove('btn-progress');
+          rptBtn.innerHTML = '❌ Report Generation Failed. Click to Retry';
+          if (rptStatus) rptStatus.textContent = err.message || 'Error compiling report';
+        }
+      };
+    }
+
+    // 6. Delete project
+    document.getElementById('deleteProjectBtn').onclick = async () => {
+      if (!confirm('Are you sure you want to delete this assessment?')) return;
+      try {
+        const res = await fetch('/api/projects/' + window.CR_PROJECT.id, { method: 'DELETE' });
+        if (res.ok) {
+          window.location.href = '/assessment';
+        }
+      } catch (e) {
+        alert('Failed to delete assessment');
+      }
+    };
+  })();
+</script>
+{% endblock %}

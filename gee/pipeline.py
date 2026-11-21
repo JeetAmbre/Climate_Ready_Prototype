@@ -12,12 +12,11 @@ import config
 from . import common as C
 from .uhi import generate_uhi
 from .waterlogging import generate_waterlogging
-from .air_pollution import generate_air_pollution
 from .socioeconomic import generate_socioeconomic
 from .statistics import compute_statistics
 from .recommendations import find_priority_areas
 
-HAZARDS = ["uhi", "waterlogging", "air_pollution"]
+HAZARDS = ["uhi", "waterlogging"]
 LEVEL_RANGES_RISK = ["0.20-1.16", "1.16-2.12", "2.12-3.08", "3.08-4.04", "4.04-5.00"]
 
 
@@ -43,9 +42,9 @@ def run_assessment(job):
     inputs = C.Inputs(aoi, config.START_DATE, config.END_DATE)
     job.step("prepare", "done")
 
-    # The four frameworks are independent, so they run at the same time (much faster than one after another).
+    # The frameworks are independent, so they run at the same time.
     tasks = {"uhi": ("uhi", generate_uhi), "waterlogging": ("water", generate_waterlogging),
-             "air_pollution": ("air", generate_air_pollution), "socio": ("socio", generate_socioeconomic)}
+             "socio": ("socio", generate_socioeconomic)}
 
     def build(key):
         step, fn = tasks[key]
@@ -81,7 +80,7 @@ def run_assessment(job):
 
     # ---- layer registry (images are rendered lazily / in the background) ----
     job.step("layers", "active")
-    names = {"uhi": "UHI", "waterlogging": "Waterlogging", "air_pollution": "Air Pollution"}
+    names = {"uhi": "UHI", "waterlogging": "Waterlogging"}
     L = job.layers
     for k in HAZARDS:
         pal = C.PALETTES[k]

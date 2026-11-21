@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}Assessment Dashboard · ClimateReady{% endblock %}
+{% block head %}
+<link href="{{ url_for('static', filename='css/analysis.css', v=build_id) }}" rel="stylesheet">
+<style>
+  .ws-dashboard { padding: 2.5rem 0 4rem; }
+  .proj-card {
+    background: #fff; border: 1px solid #E2E8F0; border-radius: 12px;
+    padding: 1.5rem; transition: transform 0.2s, box-shadow 0.2s;
+    display: flex; flex-direction: column; justify-content: space-between;
+    height: 100%;
+  }
+  .proj-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06), 0 8px 10px -6px rgba(0,0,0,0.04);
+  }
+  .status-badge {
+    font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.65rem;
+    border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .status-active { background: #DCFCE7; color: #166534; }
+  .focus-badge {
+    font-size: 0.75rem; font-weight: 500; padding: 0.2rem 0.5rem;
+    border-radius: 4px; background: #F1F5F9; color: #475569;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container-xl">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-3 py-1 mb-2 fw-medium">Adaptation Assessment</span>
+        <h1>Assessment Dashboard</h1>
+        <p class="lead-cr mb-0">Multi-hazard Urban Heat and Waterlogging assessment across Indian administrative units.</p>
+      </div>
+      <div>
+        <button class="btn btn-primary btn-lg shadow-sm" type="button" data-bs-toggle="modal" data-bs-target="#newProjectModal">
+          + New Assessment
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ws-dashboard">
+  <div class="container-xl">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="h4 mb-0 fw-bold">Active Assessments ({{ projects|length }})</h2>
+      <span class="text-muted small">Showing all saved assessments</span>
+    </div>
+
+    {% if projects %}
+    <div class="row g-4">
+      {% for p in projects %}
+      <div class="col-md-6 col-lg-4">
+        <div class="proj-card">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="focus-badge">Dual Hazard (Heat + Waterlogging)</span>
+              <span class="status-badge status-active">{{ p.status }}</span>
+            </div>
+            <h3 class="h5 fw-bold text-dark mb-1">
+              <a href="{{ url_for('assessment_project', project_id=p.id) }}" class="text-decoration-none text-dark stretched-link">
+                {{ p.name }}
+              </a>
+            </h3>
+            <p class="small text-muted mb-3">📍 {{ p.location_name }} ({{ p.level|title }})</p>
+            
+            <div class="bg-light p-2 rounded mb-3 small">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">Assessment State:</span>
+                <span class="fw-semibold {% if p.has_assessment %}text-success{% else %}text-muted{% endif %}">
+                  {% if p.has_assessment %}✅ Assessment Generated{% else %}⏳ Pending Run{% endif %}
+                </span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span class="text-muted">Workflow Stage:</span>
+                <span class="text-success fw-medium">4-Stage Pipeline</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-2 border-top small text-muted">
+            <span>Created {{ p.created_at }}</span>
+            <span class="text-primary fw-medium">Open Assessment →</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card p-5 text-center border-dashed">
+      <div class="my-4">
+        <svg width="48" height="48" fill="none" stroke="#64748B" stroke-width="1.5" viewBox="0 0 24 24" class="mb-3">
+          <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+        <h3 class="h5 fw-bold mb-2">No assessments created yet</h3>
+        <p class="text-muted small mx-auto" style="max-width: 420px;">
+          Create a targeted assessment for your district or subdistrict to assess satellite risk profiles, discover CPWD-benchmarked interventions, and generate decision dossiers.
+        </p>
+        <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#newProjectModal">
+          + Start Your First Assessment
+        </button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Create Project Modal (Strictly 3 fields: Name, Level, Location) -->
+<div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h2 class="modal-title h5 fw-bold" id="newProjectModalLabel">Create New Climate Assessment</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="projectCreateForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-medium small mb-1" for="projName">Assessment Name</label>
+            <input type="text" class="form-control" id="projName" placeholder="e.g. Thane Urban Heat & Drainage Plan" required>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-sm-5">
+              <label class="form-label fw-medium small mb-1" for="projLevel">Administrative Level</label>
+              <select class="form-select" id="projLevel">
+                <option value="district" selected>District</option>
+                <option value="subdistrict">Subdistrict</option>
+              </select>
+            </div>
+            <div class="col-sm-7 position-relative">
+              <label class="form-label fw-medium small mb-1" for="projLocInput">Search Location</label>
+              <input type="text" class="form-control" id="projLocInput" placeholder="Type district name..." autocomplete="off" required>
+              <input type="hidden" id="projLocId">
+              <input type="hidden" id="projLocName">
+              <div class="list-group loc-results d-none position-absolute w-100 shadow-sm" id="projLocResults" style="z-index: 1050; max-height: 220px; overflow-y: auto;"></div>
+            </div>
+          </div>
+          <div id="selectedLocBadge" class="alert alert-light border py-1 px-2 small mb-3 d-none d-flex justify-content-between align-items-center">
+            <span id="selectedLocText" class="fw-medium text-success"></span>
+            <button type="button" class="btn-close btn-close-sm" id="clearSelectedLoc" aria-label="Clear"></button>
+          </div>
+
+          <div class="alert alert-danger py-2 small d-none" id="projFormError"></div>
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveProjBtn">Create Assessment →</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function() {
+    const levelSel = document.getElementById('projLevel');
+    const locInput = document.getElementById('projLocInput');
+    const locResults = document.getElementById('projLocResults');
+    const locId = document.getElementById('projLocId');
+    const locName = document.getElementById('projLocName');
+    const badge = document.getElementById('selectedLocBadge');
+    const badgeText = document.getElementById('selectedLocText');
+    const clearBtn = document.getElementById('clearSelectedLoc');
+    const form = document.getElementById('projectCreateForm');
+    const errEl = document.getElementById('projFormError');
+    const saveBtn = document.getElementById('saveProjBtn');
+
+    // Auto-fill from query params if passed from Live Risk Explorer
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('new') === '1') {
+      const modal = new bootstrap.Modal(document.getElementById('newProjectModal'));
+      modal.show();
+      const pLocId = urlParams.get('loc_id');
+      const pLocName = urlParams.get('loc_name');
+      if (pLocId && pLocName) {
+        locId.value = pLocId;
+        locName.value = pLocName;
+        locInput.value = pLocName;
+        badgeText.textContent = 'Selected: ' + pLocName;
+        badge.classList.remove('d-none');
+        document.getElementById('projName').value = pLocName + ' Resilience Plan';
+      }
+    }
+
+    let searchT = null;
+    locInput.addEventListener('input', () => {
+      clearTimeout(searchT);
+      const q = locInput.value.trim();
+      if (q.length < 2) {
+        locResults.classList.add('d-none');
+        return;
+      }
+      searchT = setTimeout(async () => {
+        try {
+          const res = await fetch('/api/location/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ level: levelSel.value, q: q })
+          });
+          const d = await res.json();
+          const items = d.results || [];
+          if (!items.length) {
+            locResults.innerHTML = '<div class="list-group-item small text-muted">No matching administrative units found</div>';
+          } else {
+            locResults.innerHTML = items.map(r => {
+              const sub = r.parent ? ` <small class="text-muted">(${r.parent})</small>` : '';
+              return `<button type="button" class="list-group-item list-group-item-action small py-2" data-id="${r.id}" data-name="${r.name}${r.parent ? ', ' + r.parent : ''}">${r.name}${sub}</button>`;
+            }).join('');
+            locResults.querySelectorAll('button').forEach(btn => {
+              btn.onclick = () => {
+                locId.value = btn.dataset.id;
+                locName.value = btn.dataset.name;
+                locInput.value = btn.dataset.name;
+                badgeText.textContent = 'Selected: ' + btn.dataset.name;
+                badge.classList.remove('d-none');
+                locResults.classList.add('d-none');
+                errEl.classList.add('d-none');
+              };
+            });
+          }
+          locResults.classList.remove('d-none');
+        } catch(e) {
+          console.error(e);
+        }
+      }, 250);
+    });
+
+    levelSel.onchange = () => {
+      locInput.value = '';
+      locId.value = '';
+      locName.value = '';
+      badge.classList.add('d-none');
+      locResults.classList.add('d-none');
+      locInput.placeholder = `Type ${levelSel.value} name...`;
+    };
+
+    clearBtn.onclick = () => {
+      locInput.value = '';
+      locId.value = '';
+      locName.value = '';
+      badge.classList.add('d-none');
+    };
+
+    document.addEventListener('click', (e) => {
+      if (!locResults.contains(e.target) && e.target !== locInput) {
+        locResults.classList.add('d-none');
+      }
+    });
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      errEl.classList.add('d-none');
+      if (!locId.value) {
+        errEl.textContent = 'Please select a valid location from the search dropdown.';
+        errEl.classList.remove('d-none');
+        return;
+      }
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Creating...';
+      try {
+        const payload = {
+          name: document.getElementById('projName').value.trim(),
+          level: levelSel.value,
+          location_id: locId.value,
+          location_name: locName.value
+        };
+        const res = await fetch('/api/projects/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to create assessment');
+        window.location.href = '/assessment/' + data.project.id;
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('d-none');
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Create Assessment →';
+      }
+    };
+  })();
+</script>
+{% endblock %}

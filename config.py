@@ -23,9 +23,9 @@ EE_SERVICE_ACCOUNT = os.getenv("EE_SERVICE_ACCOUNT", "")
 EE_PRIVATE_KEY_FILE = os.getenv("EE_PRIVATE_KEY_FILE", "")
 EE_PRIVATE_KEY_DATA = os.getenv("EE_PRIVATE_KEY_DATA", "")
 
-# Assessment period (from the research scripts)
-START_DATE = os.getenv("START_DATE", "2023-01-01")
-END_DATE = os.getenv("END_DATE", "2023-12-31")
+# Assessment period (from the research scripts: fixed 2024–2025 baseline)
+START_DATE = os.getenv("START_DATE", "2024-01-01")
+END_DATE = os.getenv("END_DATE", "2025-12-31")
 
 # Scale (metres) used for the 2nd/98th percentile normalisation of the hazard layers.
 # 100m aligns with the analysis grid and is ~3x faster than 30m; override with STRETCH_SCALE=30 in .env if desired.
@@ -36,9 +36,6 @@ ANALYSIS_SCALE = 100
 # Projection for that grid. Leave empty to auto-pick the UTM zone of the AOI
 # (the research scripts hard-code EPSG:32643 = UTM 43N, correct for Mumbai/Thane).
 TARGET_CRS = os.getenv("TARGET_CRS", "")
-
-# GRIP4 road dataset region used by the air-pollution script
-GRIP4_REGION = os.getenv("GRIP4_REGION", "South-East-Asia")
 
 # ---------------- Risk classes ----------------
 # Final risk = hazard * socio / 5  (range 0.2 - 5). Equal-interval breaks from the master script.
@@ -86,7 +83,10 @@ MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
 MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
 MAIL_TO = os.getenv("MAIL_TO", "jeetambre090@gmail.com")
 
-# ---------------- Auto Deploy Webhook ----------------
-DEPLOY_SECRET = os.getenv("DEPLOY_SECRET", "cr-deploy-78f92a10b4c6e83d91f2")
+# ---------------- Gemini AI Agent ----------------
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", "")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+GEMINI_LITE_MODEL = os.getenv("GEMINI_LITE_MODEL", "gemini-3.5-flash-lite")
+GOOGLE_MAPS_STATIC_API_KEY = os.getenv("GOOGLE_MAPS_STATIC_API_KEY", "")
 
 

@@ -65,11 +65,10 @@
             </div>
           </div>
           <h3 class="flow-step-title">Choose an environmental risk</h3>
-          <p class="flow-step-desc">Explore one of the three tailored assessment modules:</p>
+          <p class="flow-step-desc">Explore one of the tailored assessment modules:</p>
           <div class="flow-step-subitems">
             <div class="flow-step-subitem"><strong>Urban Heat Island:</strong> Explore how the risk of urban heat varies across the region.</div>
             <div class="flow-step-subitem"><strong>Waterlogging:</strong> Identify areas with conditions linked to greater water accumulation.</div>
-            <div class="flow-step-subitem"><strong>Air Pollution Exposure:</strong> Explore areas with built-up traits linked to pollution susceptibility.</div>
           </div>
         </div>
 
@@ -157,7 +156,7 @@
             A hazard is a potentially damaging event or trend, or a physical impact associated with climate change.
           </div>
           <div class="concept-card-example">
-            <strong>Examples:</strong> Extreme heat waves and intense rainfall. In air pollution, harmful pollutant concentrations act as an environmental hazard.
+            <strong>Examples:</strong> Extreme heat waves, prolonged high temperatures and intense rainfall events.
           </div>
         </div>
       </div>
@@ -207,7 +206,7 @@
       <div class="col-lg-7">
         <div class="p-4 bg-white border rounded-3 h-100">
           <h4 class="h5 mb-2">How does ClimateReady apply these concepts?</h4>
-          <p class="prose mb-0">ClimateReady uses spatial environmental indicators to assess and map relative risk patterns across a selected region for urban heat, waterlogging and air-pollution exposure. The indicators help characterise the environmental conditions associated with risk. The resulting maps allow users to compare locations, investigate the factors behind their scores and explore possible actions.</p>
+          <p class="prose mb-0">ClimateReady uses spatial environmental indicators to assess and map relative risk patterns across a selected region for urban heat and waterlogging. The indicators help characterise the environmental conditions associated with risk. The resulting maps allow users to compare locations, investigate the factors behind their scores and explore possible actions.</p>
         </div>
       </div>
       <div class="col-lg-5">
@@ -542,104 +541,6 @@
         </div>
       </div>
 
-      <!-- MODULE C: AIR POLLUTION EXPOSURE -->
-      <div class="module-acc-item">
-        <div class="module-acc-header" id="headingAir">
-          <button class="module-acc-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAir" aria-expanded="false" aria-controls="collapseAir">
-            <div class="module-acc-meta">
-              <div class="module-acc-badge badge-air">
-                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
-              </div>
-              <div class="module-acc-title-group">
-                <h3>C. Air Pollution Exposure Vulnerability</h3>
-                <p>Road density, surface heating, urban canopy ventilation, built form and dispersion</p>
-              </div>
-            </div>
-            <div class="d-flex align-items-center">
-              <span class="module-acc-indicator-count">5 Indicators</span>
-              <svg class="module-acc-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
-            </div>
-          </button>
-        </div>
-
-        <div id="collapseAir" class="accordion-collapse collapse" aria-labelledby="headingAir" data-bs-parent="#modulesAccordion">
-          <div class="module-acc-body">
-            <!-- What are we assessing? -->
-            <div class="mb-4">
-              <h4 class="h6 text-uppercase fw-bold text-muted-cr">What are we assessing?</h4>
-              <p class="prose">Air pollution is the presence of harmful substances in the air. People's exposure depends on pollutant concentrations, how long they spend in affected places, their activities and other factors.</p>
-              <p class="prose mb-0">ClimateReady's air-pollution module examines selected environmental and built-up characteristics associated with susceptibility to pollution exposure or pollutant accumulation. <strong>Important:</strong> This module does not necessarily measure actual pollutant concentrations. Its vulnerability score should not be interpreted as an Air Quality Index (AQI), a PM2.5 concentration reading or a direct estimate of an individual's health risk.</p>
-            </div>
-
-            <!-- Indicators Used -->
-            <h4 class="h6 text-uppercase fw-bold text-muted-cr mb-2">Indicators Used</h4>
-            <div class="indicators-subgrid">
-              <!-- Road Density -->
-              <div class="indicator-card">
-                <div class="indicator-card-title">
-                  <h4>Road Density</h4>
-                  <span class="indicator-tag">Traffic</span>
-                </div>
-                <p>Road density describes the concentration of roads within an area, highlighting zones with greater potential exposure to vehicular tailpipe emissions.</p>
-                <div class="ind-caveat">Road density alone cannot determine actual traffic volume, vehicle fleet mix or real-time emissions.</div>
-              </div>
-
-              <!-- LST -->
-              <div class="indicator-card">
-                <div class="indicator-card-title">
-                  <h4>Land Surface Temperature</h4>
-                  <span class="indicator-tag">LST</span>
-                </div>
-                <p>Measures surface heat to characterise the local microclimate and boundary layer conditions.</p>
-                <div class="ind-caveat">Not a direct measurement of airborne pollution or proof that a hotter area has higher pollutant concentrations.</div>
-              </div>
-
-              <!-- NDBI -->
-              <div class="indicator-card">
-                <div class="indicator-card-title">
-                  <h4>Built-up Intensity</h4>
-                  <span class="indicator-tag">NDBI</span>
-                </div>
-                <p>Built form can influence urban ventilation, airflow friction and pollutant trapping in street canyons.</p>
-                <div class="ind-caveat">NDBI alone cannot determine street-canyon geometry, building height or aerodynamic dispersion.</div>
-              </div>
-
-              <!-- Wind Speed -->
-              <div class="indicator-card">
-                <div class="indicator-card-title">
-                  <h4>Wind Speed</h4>
-                  <span class="indicator-tag">Ventilation</span>
-                </div>
-                <p>Wind influences the transport, dilution and dispersion of air pollutants across an urban basin.</p>
-                <div class="ind-caveat">Stronger winds can disperse emissions, but direction, terrain and sources produce varied local outcomes.</div>
-              </div>
-
-              <!-- NDVI -->
-              <div class="indicator-card">
-                <div class="indicator-card-title">
-                  <h4>Vegetation Index</h4>
-                  <span class="indicator-tag">NDVI</span>
-                </div>
-                <p>Vegetation may influence local environments through particulate deposition, shading and changes in airflow patterns.</p>
-                <div class="ind-caveat">Effects vary by tree species and canopy structure; vegetation should not be assumed to eliminate pollution in every setting.</div>
-              </div>
-            </div>
-
-            <!-- Score Meaning & Actions -->
-            <div class="row g-4 pt-3 border-top">
-              <div class="col-md-6">
-                <h4 class="h6 text-uppercase fw-bold text-muted-cr">What might a higher vulnerability score indicate?</h4>
-                <p class="small text-muted-cr mb-0">A higher score may indicate a combination of environmental characteristics associated with potential susceptibility to pollution exposure or accumulation, according to the scoring framework. It does not confirm that pollutant concentrations are higher at that exact location.</p>
-              </div>
-              <div class="col-md-6">
-                <h4 class="h6 text-uppercase fw-bold text-muted-cr">What actions might help?</h4>
-                <p class="small text-muted-cr mb-0">Potential measures include reducing unnecessary vehicle idling, supporting cleaner transport, improving traffic management, protecting suitable green buffers and conducting air-quality monitoring near potentially exposed communities. <em>Note: Transport planning and emission standards require action by public authorities.</em></p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 </section>
@@ -716,7 +617,7 @@
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Individual Level
         </h4>
-        <p>Actions that people can take in their daily routines or immediate surroundings, where appropriate — such as maintaining domestic cool roofs, installing rainwater barrels, or timing outdoor travel during low-pollution windows.</p>
+        <p>Actions that people can take in their daily routines or immediate surroundings, where appropriate — such as maintaining domestic cool roofs, installing rainwater barrels, or conserving water.</p>
       </div>
 
       <div class="action-level-card">

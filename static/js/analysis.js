@@ -1,9 +1,9 @@
 /* ClimateReady analysis page. All science is done by the Flask backend; this file only shows results. */
 (function () {
   const CFG = window.CR_CFG, $ = id => document.getElementById(id), esc = Recs.esc;
-  const HZ_COLOR = { uhi: '#EA580C', waterlogging: '#1D4ED8', air_pollution: '#7C3AED' };
+  const HZ_COLOR = { uhi: '#EA580C', waterlogging: '#1D4ED8' };
   const LV_COLOR = { 'Very High': '#B91C1C', High: '#EA580C', Moderate: '#B7791F', Low: '#64748B', 'Very Low': '#94A3B8' };
-  const GROUPS = [['uhi', 'Urban Heat Island'], ['waterlogging', 'Waterlogging'], ['air_pollution', 'Air Pollution'], ['socio', 'Socio-economic']];
+  const GROUPS = [['uhi', 'Urban Heat Island'], ['waterlogging', 'Waterlogging'], ['socio', 'Socio-economic']];
   const S = { level: 'district', picked: [], pending: null, custom: null, layers: [], active: null, recs: null, state: 'idle', poll: null, timer: null };
   let map;
   const TOUCH = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
@@ -38,7 +38,8 @@
     return d;
   }
   const post = (u, b) => api(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
-  const show = id => $(id).classList.remove('d-none'), hide = id => $(id).classList.add('d-none');
+  const show = id => { const el = $(id); if (el) el.classList.remove('d-none'); };
+  const hide = id => { const el = $(id); if (el) el.classList.add('d-none'); };
   const fmt = (v, d = 1) => v == null ? '–' : Number(v).toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
   const fmtPop = v => v >= 1e6 ? (v / 1e6).toFixed(2) + ' million' : Math.round(v).toLocaleString();
   function msg(text, kind = 'warning') { const m = $('locMsg'); m.className = `alert alert-${kind} py-2 mb-0`; m.textContent = text; }
@@ -46,6 +47,18 @@
   const hasAssessment = () => ['queued', 'processing', 'done'].includes(S.state);
 
   /* ---------- location selection ---------- */
+  function initPreselected() {
+    if (window.CR_PROJECT && window.CR_PROJECT.location_id) {
+      S.level = window.CR_PROJECT.level || 'district';
+      S.picked = [{
+        id: window.CR_PROJECT.location_id,
+        name: window.CR_PROJECT.location_name,
+        level: S.level
+      }];
+    }
+  }
+  initPreselected();
+
   function renderChips() {
     const box = $('chips'); box.innerHTML = '';
     const items = S.custom ? [{ id: 'custom', name: 'Custom area: ' + S.custom.name }] : S.picked;
@@ -106,18 +119,26 @@
   });
 
   /* ---------- start / queue / progress ---------- */
-  function setBusy(b) { $('startBtn').disabled = b; $('recBtn').disabled = b || S.state !== 'done'; $('recBtn2').disabled = $('recBtn').disabled; }
+  function setBusy(b) {
+    if ($('startBtn')) $('startBtn').disabled = b;
+    if ($('recBtn')) $('recBtn').disabled = b || S.state !== 'done';
+    if ($('recBtn2')) $('recBtn2').disabled = $('recBtn') ? $('recBtn').disabled : b;
+  }
   $('startBtn').addEventListener('click', async () => {
     clearMsg();
     if (S.state === 'queued' || S.state === 'processing') return msg('Assessment already in progress.');
     const payload = S.custom ? { mode: 'custom', upload_id: S.custom.upload_id } : { mode: S.level, ids: S.picked.map(p => p.id) };
+    if (window.CR_PROJECT && window.CR_PROJECT.id) {
+      payload.project_id = window.CR_PROJECT.id;
+    }
     if (!S.custom && !S.picked.length) return msg('Add at least one location first.');
-    if (S.state === 'done' && !confirm('Your current assessment will be lost. Do you want to leave?')) return;
+    if (S.state === 'done' && !window.CR_PROJECT && !confirm('Your current assessment will be lost. Do you want to leave?')) return;
     try {
       await post('/api/assessment/start', payload);
     } catch (e) { return msg(e.message, e.status === 503 ? 'danger' : 'warning'); }
     resetResults(); S.state = 'queued'; setBusy(true);
-    ['stateEmpty', 'stateError', 'workspace'].forEach(hide); show('stateLoading');
+    ['stateEmpty', 'stateError', 'workspace', 'projectLaunchCard'].forEach(id => { if ($(id)) hide(id); });
+    show('stateLoading');
     renderSteps([]); $('stateLoading').scrollIntoView({ behavior: 'smooth' });
     S.t0 = Date.now(); clearInterval(S.tick); S.tick = setInterval(() => {
       const t = Math.floor((Date.now() - S.t0) / 1000);
@@ -157,9 +178,11 @@
   function resetResults() {
     S.layers = []; S.active = null; S.recs = null;
     if (map) { map.clearLayer(); map.setPins([], HZ_COLOR, () => {}); }
-    ['workspace', 'statsSection', 'recsSection', 'recModal'].forEach(hide);
-    $('mapActions').innerHTML = '<button class="btn btn-primary" id="recBtn2" type="button">Generate Recommendations</button>';
-    $('recBtn2').onclick = generateRecs;
+    ['workspace', 'statsSection', 'recsSection', 'recModal'].forEach(id => { if ($(id)) hide(id); });
+    if ($('mapActions')) {
+      $('mapActions').innerHTML = '<button class="btn btn-primary" id="recBtn2" type="button">Generate Recommendations</button>';
+      if ($('recBtn2')) $('recBtn2').onclick = generateRecs;
+    }
   }
   async function loadResults() {
     const [L, stats] = await Promise.all([api('/api/layers'), api('/api/statistics')]);
@@ -175,7 +198,25 @@
     if (!map) { map = new CRMap('map'); map.onClick(inspect); }
     buildPanel(); map.resize(); map.showAOI(L.aoi, L.bounds);
     renderStats(stats); selectLayer('risk_uhi');
-    $('recBtn').disabled = $('recBtn2').disabled = false;
+    if ($('recBtn') && $('recBtn2')) {
+      $('recBtn').disabled = $('recBtn2').disabled = false;
+    }
+    window.CR_AOI_BOUNDS = L.bounds;
+    window.CR_AOI_GEOJSON = L.aoi;
+    window.dispatchEvent(new CustomEvent('cr:assessment-done', { detail: { label: L.label, bounds: L.bounds, aoi: L.aoi } }));
+
+    // Persist assessment to DB if in project workspace
+    if (window.CR_PROJECT && window.CR_PROJECT.id) {
+      post('/api/projects/' + window.CR_PROJECT.id + '/assessment', {
+        label: L.label,
+        aoi: L.aoi,
+        bounds: L.bounds,
+        warnings: L.warnings || [],
+        stats: stats,
+        layers: S.layers
+      }).catch(console.error);
+    }
+
     $('workspace').scrollIntoView({ behavior: 'smooth' });
     setTimeout(() => map.resize(), 400);
   }
@@ -184,12 +225,16 @@
   function buildPanel() {
     const radio = (l, sw) => `<label class="opt${l.available === false ? ' nodata' : ''}"><input type="radio" name="layer" value="${l.id}">${sw ? `<span class="sw" style="background:${sw}"></span>` : ''}<span>${esc(l.label)}</span>${l.available === false ? '<small>no data</small>' : ''}</label>`;
     const sw = l => (l.legend.items ? l.legend.items[4].color : l.legend.palette[l.legend.palette.length - 1]);
-    $('riskLayers').innerHTML = ['risk_uhi', 'risk_waterlogging', 'risk_air_pollution'].map(id => S.layers.find(l => l.id === id)).map(l => radio(l, sw(l))).join('');
-    $('indGroups').innerHTML = GROUPS.map(([k, name]) => {
-      const items = S.layers.filter(l => l.hazard === k && l.group !== 'risk');
-      return `<button class="grp collapsed" data-bs-toggle="collapse" data-bs-target="#g_${k}" aria-expanded="false">${name}</button>
-        <div class="collapse" id="g_${k}">${items.map(l => radio(l)).join('')}</div>`;
-    }).join('');
+    if ($('riskLayers')) {
+      $('riskLayers').innerHTML = ['risk_uhi', 'risk_waterlogging'].map(id => S.layers.find(l => l.id === id)).filter(Boolean).map(l => radio(l, sw(l))).join('');
+    }
+    if ($('indGroups') && !window.CR_EXPLORER_MODE) {
+      $('indGroups').innerHTML = GROUPS.map(([k, name]) => {
+        const items = S.layers.filter(l => l.hazard === k && l.group !== 'risk');
+        return `<button class="grp collapsed" data-bs-toggle="collapse" data-bs-target="#g_${k}" aria-expanded="false">${name}</button>
+          <div class="collapse" id="g_${k}">${items.map(l => radio(l)).join('')}</div>`;
+      }).join('');
+    }
     document.querySelectorAll('input[name=layer]').forEach(i => i.onchange = () => selectLayer(i.value));
   }
   async function selectLayer(id) {
@@ -203,13 +248,16 @@
     }
     renderLegend(lyr.legend); show('mapBusy');
     try {
-      const d = await api(`/api/layers/${id}/tiles`);
+      const pidParam = (window.CR_PROJECT && window.CR_PROJECT.id) ? `?project_id=${window.CR_PROJECT.id}` : '';
+      const d = await api(`/api/layers/${id}/tiles${pidParam}`);
       if (d.unavailable) { hide('mapBusy'); $('mapNotice').innerHTML = `<b>Data not available</b>${esc(d.message)}`; show('mapNotice'); return; }
       if (S.active !== id) return;
       const fail = () => { if (S.active !== id) return; hide('mapBusy');
         $('mapNotice').innerHTML = '<b>This layer could not be rendered</b>Earth Engine did not return it for this area (it may be too heavy or timed out). Try again, or choose a smaller area.'; show('mapNotice'); };
       if (d.overlay) {
-        const o = map.setOverlay(d.overlay, d.bounds); o.on('load', () => hide('mapBusy')); o.on('error', fail);
+        const o = map.setOverlay(d.overlay, d.bounds);
+        hide('mapBusy');
+        if (o) { o.on('load', () => hide('mapBusy')); o.on('error', fail); }
       } else {
         const t = map.setLayer(d.url); let bad = 0;
         t.on('tileerror', () => { bad++; }); t.on('load', () => { hide('mapBusy'); if (bad > 3) fail(); });
@@ -247,20 +295,37 @@
 
   /* ---------- statistics ---------- */
   function renderStats(st) {
+    if (!st || !st.overview) return;
     const o = st.overview;
-    $('overview').innerHTML = [['Total Area', fmt(o.area_km2) + ' km²'], ['Population (WorldPop 2020)', fmtPop(o.population)],
-      ['Assessment Location', esc(o.location)], ['Approx. coordinates', `${o.lat.toFixed(4)}° N, ${o.lng.toFixed(4)}° E`]]
-      .map(([k, v]) => `<div class="col-6 col-lg-3"><div class="ov-card"><span>${k}</span><b>${v}</b></div></div>`).join('');
-    $('hazardStats').innerHTML = ['uhi', 'waterlogging', 'air_pollution'].map(hz => {
-      const h = st.hazards[hz], pal = S.layers.find(l => l.id === 'risk_' + hz).legend.items.map(i => i.color);
-      const row = (r, kind) => {
-        const pct = kind === 'area' ? r.area_pct : r.population_pct, val = kind === 'area' ? fmt(r.area_km2, 2) + ' km²' : Math.round(r.population).toLocaleString();
-        return `<div class="srow"><span>${r.level}</span><div class="sbar"><i style="width:${pct}%;background:${pal[r.class - 1]}"></i></div><div class="sval">${pct.toFixed(1)}%<small>${val}</small></div></div>`;
-      };
-      return `<div class="hz" style="border-top-color:${HZ_COLOR[hz]}"><h3>${esc(h.name)} Risk</h3><div class="row g-4">
-        <div class="col-lg-6"><h4>Percentage of AREA in each risk class</h4>${h.rows.map(r => row(r, 'area')).join('')}</div>
-        <div class="col-lg-6"><h4>Percentage of POPULATION in each risk class</h4>${[...h.rows].reverse().map(r => row(r, 'pop')).join('')}</div></div></div>`;
-    }).join('') + '<p class="small text-muted-cr">Area and population percentages are separate measures. Statistics use the final risk maps (hazard × socio-economic vulnerability ÷ 5).</p>';
+    const latStr = (o.lat != null && typeof o.lat === 'number') ? o.lat.toFixed(4) + '° N' : '–';
+    const lngStr = (o.lng != null && typeof o.lng === 'number') ? o.lng.toFixed(4) + '° E' : '–';
+    const locStr = o.location || S.label || 'Study Area';
+    const popStr = o.population != null ? fmtPop(o.population) : '–';
+    const areaStr = o.area_km2 != null ? fmt(o.area_km2) + ' km²' : '–';
+
+    if ($('overview')) {
+      $('overview').innerHTML = [['Total Area', areaStr], ['Population (WorldPop 2020)', popStr],
+        ['Assessment Location', esc(locStr)], ['Approx. coordinates', `${latStr}, ${lngStr}`]]
+        .map(([k, v]) => `<div class="col-6 col-lg-3"><div class="ov-card"><span>${k}</span><b>${v}</b></div></div>`).join('');
+    }
+    if ($('hazardStats') && st.hazards) {
+      $('hazardStats').innerHTML = ['uhi', 'waterlogging'].map(hz => {
+        const h = st.hazards[hz];
+        if (!h) return '';
+        const lyr = S.layers.find(l => l.id === 'risk_' + hz);
+        const pal = (lyr && lyr.legend && lyr.legend.items) ? lyr.legend.items.map(i => i.color) : ['#fee2e2', '#fca5a5', '#ef4444', '#b91c1c', '#7f1d1d'];
+        const rows = h.rows || [];
+        const sortedRows = [...rows].sort((a, b) => b.class - a.class);
+        const row = (r, kind) => {
+          const pct = kind === 'area' ? r.area_pct : r.population_pct, val = kind === 'area' ? fmt(r.area_km2, 2) + ' km²' : Math.round(r.population).toLocaleString();
+          return `<div class="srow"><span>${r.level}</span><div class="sbar"><i style="width:${pct}%;background:${pal[r.class - 1]}"></i></div><div class="sval">${pct.toFixed(1)}%<small>${val}</small></div></div>`;
+        };
+        const hzName = h.name || (hz === 'uhi' ? 'Urban Heat Island' : 'Waterlogging');
+        return `<div class="hz" style="border-top-color:${HZ_COLOR[hz]}"><h3>${esc(hzName)} Risk</h3><div class="row g-4">
+          <div class="col-lg-6"><h4>Percentage of AREA in each risk class (High to Low)</h4>${sortedRows.map(r => row(r, 'area')).join('')}</div>
+          <div class="col-lg-6"><h4>Percentage of POPULATION in each risk class (High to Low)</h4>${sortedRows.map(r => row(r, 'pop')).join('')}</div></div></div>`;
+      }).join('') + '<p class="small text-muted-cr">Area and population percentages are separate measures. Statistics use the final risk maps (hazard × socio-economic vulnerability ÷ 5).</p>';
+    }
   }
 
   /* ---------- recommendations ---------- */
@@ -315,6 +380,8 @@
   }
   const seeRecs = () => { hide('recModal'); $('recsSection').scrollIntoView({ behavior: 'smooth' }); };
   function locate(id) {
+    window.CR_AOI_BOUNDS = L.bounds;
+    window.dispatchEvent(new CustomEvent('cr:assessment-done', { detail: { label: L.label, bounds: L.bounds } }));
     $('workspace').scrollIntoView({ behavior: 'smooth' });
     setTimeout(() => map.focusPin(id, Recs.popupHtml(S.recs.find(r => r.id === id))), 500);
   }
@@ -349,24 +416,62 @@
     f.end(); S.reporting = false; keepAwake(false);
   }
 
-  $('recBtn').onclick = generateRecs; $('recBtn2').onclick = generateRecs;
-  $('mViewBtn').onclick = seeRecs; $('mDlBtn').onclick = downloadReport; $('reportBtn').onclick = downloadReport;
-  $('mCloseBtn').onclick = () => hide('recModal');
+  if ($('recBtn')) $('recBtn').onclick = generateRecs;
+  if ($('recBtn2')) $('recBtn2').onclick = generateRecs;
+  if ($('mViewBtn')) $('mViewBtn').onclick = seeRecs;
+  if ($('mDlBtn')) $('mDlBtn').onclick = downloadReport;
+  if ($('reportBtn')) $('reportBtn').onclick = downloadReport;
+  if ($('mCloseBtn')) $('mCloseBtn').onclick = () => hide('recModal');
 
   /* ---------- leaving the page ---------- */
-  window.addEventListener('beforeunload', e => { if (hasAssessment()) { e.preventDefault(); e.returnValue = ''; } });
+  window.addEventListener('beforeunload', e => { if (hasAssessment() && !window.CR_PROJECT) { e.preventDefault(); e.returnValue = ''; } });
   document.addEventListener('click', e => {
     const a = e.target.closest('a[href]');
-    if (!a || !hasAssessment() || a.target === '_blank' || a.getAttribute('href').startsWith('#') || a.hasAttribute('data-bs-toggle') || a.hasAttribute('download')) return;
+    if (!a || !hasAssessment() || window.CR_PROJECT || a.target === '_blank' || a.getAttribute('href').startsWith('#') || a.hasAttribute('data-bs-toggle') || a.hasAttribute('download')) return;
     if (!confirm('Your current assessment will be lost. Do you want to leave?')) e.preventDefault();
   }, true);
 
   /* ---------- init ---------- */
-  setBusy(false); $('recBtn').disabled = $('recBtn2').disabled = true; renderChips();
+  setBusy(false);
+  if ($('recBtn')) $('recBtn').disabled = true;
+  if ($('recBtn2')) $('recBtn2').disabled = true;
+  renderChips();
   if (!CFG.loaded.district && !CFG.loaded.subdistrict) msg('No shapefiles were found in data/districts or data/subdistricts. See README.md.', 'danger');
   // Leaving the page cancels the job on the server (the browser warning was already shown).
   // (Phones fire page events when you merely switch apps, so there the server relies on its inactivity timeout instead.)
-  window.addEventListener('pagehide', () => { if (hasAssessment() && !TOUCH) navigator.sendBeacon('/api/assessment/cancel'); });
+  window.addEventListener('pagehide', () => { if (hasAssessment() && !TOUCH && !window.CR_PROJECT) navigator.sendBeacon('/api/assessment/cancel'); });
   // Back/forward cache would bring back a dead page; reload so it starts clean.
-  window.addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
+  window.addEventListener('pageshow', e => { if (e.persisted && !window.CR_PROJECT) location.reload(); });
+
+  // If this project already has completed assessment saved in DB, load it immediately
+  function initSavedAssessment() {
+    if (!window.CR_PROJECT || !window.CR_PROJECT.has_assessment || !window.CR_PROJECT.assessment_data) return;
+    const ass = window.CR_PROJECT.assessment_data;
+    if (!ass || !ass.aoi || !ass.stats) return;
+    S.layers = ass.layers || [];
+    S.label = ass.label || window.CR_PROJECT.location_name;
+    S.state = 'done';
+    setBusy(false);
+    if ($('projectLaunchCard')) hide('projectLaunchCard');
+    show('workspace');
+    show('statsSection');
+    if ($('statsScrollGuidance')) show('statsScrollGuidance');
+    if ($('wsAreas')) $('wsAreas').textContent = S.label;
+    if (!map) { map = new CRMap('map'); map.onClick(inspect); }
+    window.CR_RISK_MAP = map;
+    buildPanel();
+    renderStats(ass.stats);
+    selectLayer('risk_uhi');
+    window.CR_AOI_BOUNDS = ass.bounds;
+    window.CR_AOI_GEOJSON = ass.aoi;
+    window.dispatchEvent(new CustomEvent('cr:assessment-done', { detail: { label: S.label, bounds: ass.bounds, aoi: ass.aoi } }));
+    setTimeout(() => {
+      if (map) {
+        map.resize();
+        if (ass.aoi && ass.bounds) map.showAOI(ass.aoi, ass.bounds);
+      }
+    }, 250);
+  }
+
+  initSavedAssessment();
 })();

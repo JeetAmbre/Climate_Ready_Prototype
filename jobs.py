@@ -16,7 +16,6 @@ STEPS = [
     ("prepare", "Preparing selected area"),
     ("uhi", "Processing Urban Heat Island"),
     ("water", "Processing Waterlogging"),
-    ("air", "Processing Air Pollution"),
     ("socio", "Processing Socio-economic vulnerability"),
     ("risk", "Combining hazards into final risk maps"),
     ("layers", "Preparing map layers"),

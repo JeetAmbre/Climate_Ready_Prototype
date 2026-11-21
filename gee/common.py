@@ -11,7 +11,6 @@ PALETTES = {
     # coloured (no near-white) so the five levels stay clearly distinguishable on a base map.
     "uhi": ["ffe600", "ffa000", "ff5400", "d00000", "5c0010"],
     "waterlogging": ["00e5ff", "2f9bff", "1c46e0", "2a0fa8", "0a0a4d"],
-    "air_pollution": ["f1a6ff", "c25cff", "8f1fe0", "5b0fa6", "2a0463"],
     "socio": ["e8f8ee", "a8e6c1", "5fd08d", "22a860", "046c3c"],
 }
 # Indicator colour ramps used in the master script
@@ -44,7 +43,7 @@ class Indicator:
 
 @dataclass
 class Framework:
-    key: str            # uhi / waterlogging / air_pollution / socio
+    key: str            # uhi / waterlogging / socio
     name: str
     index: ee.Image     # continuous 1-5 index
     indicators: list = field(default_factory=list)
@@ -55,6 +54,21 @@ class Framework:
 
 
 def init_earth_engine():
+    import os
+    sa_json = (os.getenv("GEE_SERVICE_ACCOUNT_JSON") or os.getenv("EE_SERVICE_ACCOUNT_JSON") or "").strip()
+    if sa_json:
+        import json
+        try:
+            if os.path.exists(sa_json):
+                creds = ee.ServiceAccountCredentials(None, key_file=sa_json)
+            else:
+                creds_dict = json.loads(sa_json)
+                creds = ee.ServiceAccountCredentials(creds_dict.get("client_email"), key_data=sa_json)
+            ee.Initialize(creds, project=config.EE_PROJECT or None)
+            return
+        except Exception as ex:
+            print(f"[gee] Service account JSON initialization note: {ex}")
+
     if config.EE_SERVICE_ACCOUNT and (config.EE_PRIVATE_KEY_DATA or config.EE_PRIVATE_KEY_FILE):
         if config.EE_PRIVATE_KEY_DATA:
             creds = ee.ServiceAccountCredentials(config.EE_SERVICE_ACCOUNT, key_data=config.EE_PRIVATE_KEY_DATA)

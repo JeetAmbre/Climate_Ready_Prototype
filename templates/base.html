@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}ClimateReady{% endblock %} · ClimateReady</title>
   <meta name="description"
-    content="ClimateReady is a local climate decision-support platform for urban heat, waterlogging and air-pollution vulnerability.">
+    content="ClimateReady is a local climate decision-support platform for urban heat and waterlogging vulnerability.">
   <link rel="icon" href="{{ url_for('static', filename='images/faviconLogo.png', v=build_id) }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,13 +30,39 @@
       <div class="collapse navbar-collapse" id="navMenu">
         <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
           {% for ep, label in
-          [('index','Home'),('about','About'),('analysis','Analysis'),('methodology','Explore & Learn'),('contact','Contact')]
+          [('index','Home'),('about','About'),('assessment','Assessment'),('methodology','Explore & Learn'),('contact','Contact')]
           %}
           <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == ep }}" href="{{ url_for(ep) }}">{{
               label }}</a></li>
           {% endfor %}
-          <li class="nav-item ms-lg-3 mt-2 mt-lg-0"><a class="btn btn-primary" href="{{ url_for('analysis') }}">Start
-              Assessment</a></li>
+          
+          {% if current_user %}
+          <li class="nav-item dropdown ms-lg-2">
+            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              {% if current_user.picture %}
+              <img src="{{ current_user.picture }}" alt="{{ current_user.name }}" class="rounded-circle" width="28" height="28">
+              {% else %}
+              <span class="badge rounded-circle bg-success text-white p-2" style="width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center;">{{ current_user.name[:1]|upper }}</span>
+              {% endif %}
+              <span class="small fw-medium">{{ current_user.name.split(' ')[0] }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+              <li><h6 class="dropdown-header small">{{ current_user.email }}</h6></li>
+              <li><a class="dropdown-item small" href="{{ url_for('assessment') }}">My Assessments</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item small text-danger" href="{{ url_for('logout') }}">Sign Out</a></li>
+            </ul>
+          </li>
+          {% else %}
+          <li class="nav-item ms-lg-2">
+            <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('login') }}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="me-1"><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg>
+              Sign In
+            </a>
+          </li>
+          {% endif %}
+
+          <li class="nav-item ms-lg-2 mt-2 mt-lg-0"><a class="btn btn-primary btn-sm" href="{{ url_for('assessment') }}">Start Assessment</a></li>
         </ul>
       </div>
     </div>

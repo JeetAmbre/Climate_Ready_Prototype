@@ -29,9 +29,9 @@
 .dim-water{border-top-color:#1D4ED8}.dim-water svg{color:#1D4ED8}
 .dim-air{border-top-color:#7C3AED}.dim-air svg{color:#7C3AED}
 /* flow (a real sequence, so numbered) */
-.flow{list-style:none;padding:0;margin:2rem 0 0;display:grid;grid-template-columns:repeat(6,1fr);gap:1.25rem;counter-reset:s}
+.flow{list-style:none;padding:0;margin:2.5rem auto 0;display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;counter-reset:s;max-width:1100px}
 .flow li{position:relative;padding-top:2.6rem}
-.flow li::before{content:"";position:absolute;top:13px;left:34px;right:-1.25rem;height:2px;background:#CBD5E1}
+.flow li::before{content:"";position:absolute;top:13px;left:34px;right:-1.5rem;height:2px;background:#CBD5E1}
 .flow li:last-child::before{display:none}
 .flow .n{position:absolute;top:0;left:0;width:28px;height:28px;border-radius:50%;background:var(--cr-green);color:#fff;font-size:.85rem;font-weight:600;display:grid;place-items:center}
 .flow h3{font-size:1rem;margin-bottom:.3rem}.flow p{font-size:.9rem;color:var(--cr-text-2);margin:0}

@@ -1,20 +1,26 @@
 {% extends "base.html" %}
 {% block title %}Building Resilience{% endblock %}
-{% block head %}<link href="{{ url_for('static', filename='css/home.css', v=build_id) }}" rel="stylesheet">{% endblock %}
+{% block head %}
+<link href="{{ url_for('static', filename='css/home.css', v=build_id) }}" rel="stylesheet">{% endblock %}
 {% block content %}
 <section class="hero">
   <div class="container-xl">
     <div class="row align-items-center g-5">
       <div class="col-lg-6">
+        <span
+          class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-3 py-1 mb-3 fw-medium">By
+          Team BhoomiVed</span>
         <h1>From Climate Risk to Local Action</h1>
-        <p class="lead-cr">ClimateReady is a local climate decision-support platform that helps stakeholders understand urban heat, waterlogging and air-pollution vulnerability, explore where risks are concentrated, and identify practical actions for local intervention.</p>
+        <p class="lead-cr">ClimateReady is a geospatial climate-resilience planning and decision-support platform
+          helping turn localised Urban Heat and Waterlogging risk data into actionable adaptation plans without requiring GIS expertise.</p>
         <div class="d-flex flex-column flex-sm-row gap-2 mt-4">
-          <a class="btn btn-primary btn-lg" href="{{ url_for('analysis') }}">Start Assessment</a>
-          <a class="btn btn-outline-secondary btn-lg" href="#dimensions">Explore ClimateReady</a>
+          <a class="btn btn-primary btn-lg px-4" href="{{ url_for('assessment') }}">Start Assessment →</a>
+          <a class="btn btn-outline-secondary btn-lg px-4" href="{{ url_for('methodology') }}">Learn Methodology</a>
         </div>
       </div>
       <div class="col-lg-6">
-        <div class="hero-stack" id="heroStack" role="img" aria-label="Three stacked map layers showing urban heat, waterlogging and air pollution risk zones"></div>
+        <div class="hero-stack" id="heroStack" role="img"
+          aria-label="Two stacked map layers showing urban heat and waterlogging risk zones"></div>
       </div>
     </div>
   </div>
@@ -22,43 +28,81 @@
 
 <section class="highlight" aria-label="Highlights">
   <div class="container-xl">
-    <div class="hl-viewport"><div class="hl-track" id="hlTrack">
-      <article class="hl-slide"><h2>Interactive Climate Maps</h2><p>Explore climate-risk patterns through interactive maps and multiple spatial layers.</p></article>
-      <article class="hl-slide"><h2>Understand Vulnerability</h2><p>Explore the indicators that contribute to local climate vulnerability.</p></article>
-      <article class="hl-slide"><h2>Identify Priority Areas</h2><p>Locate areas requiring greater attention through spatial risk patterns.</p></article>
-      <article class="hl-slide"><h2>Move From Risk to Action</h2><p>Connect vulnerable locations with practical, indicator-specific recommendations.</p></article>
-    </div></div>
+    <div class="hl-viewport">
+      <div class="hl-track" id="hlTrack">
+        <article class="hl-slide">
+          <h2>Stage 1: Risk Profile</h2>
+          <p>Interactive satellite risk assessment mapping localized Urban Heat and Waterlogging vulnerabilities.</p>
+        </article>
+        <article class="hl-slide">
+          <h2>Stage 2: Intervention Discovery</h2>
+          <p>Catalog-backed scientific interventions matched specifically to underlying drivers and local settings.</p>
+        </article>
+        <article class="hl-slide">
+          <h2>Stage 3: Decision Planner</h2>
+          <p>Evidence-based project reporting, INR costing benchmarks, and climate ROI evaluation for funders.</p>
+        </article>
+        <article class="hl-slide">
+          <h2>Stage 4: Monitoring & Tracking</h2>
+          <p>Longitudinal satellite verification framework to track post-implementation cooling and runoff mitigation.
+          </p>
+        </article>
+      </div>
+    </div>
     <div class="hl-dots" id="hlDots" role="group" aria-label="Choose highlight"></div>
   </div>
 </section>
 
 <section class="section" id="dimensions">
   <div class="container-xl">
-    <h2 class="section-title">Three Dimensions of Local Climate Risk</h2>
-    <div class="row g-3 g-lg-4 mt-1">
-      <div class="col-md-4"><a class="dim-card dim-uhi" href="{{ url_for('analysis') }}">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10 14.5V5a2 2 0 114 0v9.5a4 4 0 11-4 0z"/><path d="M12 9v7"/></svg>
-        <h3>Urban Heat Island</h3><p>Understand where elevated urban heat vulnerability is concentrated and explore the environmental characteristics contributing to it.</p><span class="more">Explore</span></a></div>
-      <div class="col-md-4"><a class="dim-card dim-water" href="{{ url_for('analysis') }}">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.2 6 10.5a6 6 0 11-12 0C6 9.2 12 3 12 3z"/></svg>
-        <h3>Waterlogging</h3><p>Identify areas vulnerable to water accumulation and explore the environmental conditions associated with local waterlogging risk.</p><span class="more">Explore</span></a></div>
-      <div class="col-md-4"><a class="dim-card dim-air" href="{{ url_for('analysis') }}">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10a3 3 0 10-3-3M3 12h15a3 3 0 11-3 3M3 16h7"/></svg>
-        <h3>Air Pollution</h3><p>Explore spatial patterns of air-pollution vulnerability and the environmental and urban factors associated with exposure.</p><span class="more">Explore</span></a></div>
+    <h2 class="section-title text-center">Two Critical Dimensions of Urban Climate Risk</h2>
+    <div class="row g-3 g-lg-4 mt-1 justify-content-center">
+      <div class="col-md-6 col-lg-5"><a class="dim-card dim-uhi" href="{{ url_for('assessment') }}">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+            stroke-linecap="round">
+            <path d="M10 14.5V5a2 2 0 114 0v9.5a4 4 0 11-4 0z" />
+            <path d="M12 9v7" />
+          </svg>
+          <h3>Urban Heat Island (UHI)</h3>
+          <p>Understand where elevated urban surface heat and heat stress vulnerability are concentrated, exploring
+            surface temperature, built-up intensity, and vegetation deficits.</p><span class="more">Start Heat
+            Assessment →</span>
+        </a></div>
+      <div class="col-md-6 col-lg-5"><a class="dim-card dim-water" href="{{ url_for('assessment') }}">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3s6 6.2 6 10.5a6 6 0 11-12 0C6 9.2 12 3 12 3z" />
+          </svg>
+          <h3>Waterlogging & Flood Risk</h3>
+          <p>Identify low-lying flood-prone areas vulnerable to stormwater ponding, analyzing topography, impervious
+            surface friction, drainage distances, and soil runoff traits.</p><span class="more">Start
+            Waterlogging Assessment →</span>
+        </a></div>
     </div>
   </div>
 </section>
 
 <section class="section section-muted">
-  <div class="container-xl">
-    <h2 class="section-title">From Climate Data to Local Action</h2>
-    <ol class="flow">
-      <li><span class="n">1</span><h3>Select Location</h3><p>Choose one or more districts or subdistricts.</p></li>
-      <li><span class="n">2</span><h3>Generate Assessment</h3><p>Prepare layers for the selected area.</p></li>
-      <li><span class="n">3</span><h3>Explore Risk Maps</h3><p>Switch layers, zoom and inspect locations.</p></li>
-      <li><span class="n">4</span><h3>Understand Vulnerability</h3><p>See which indicators drive the pattern.</p></li>
-      <li><span class="n">5</span><h3>Identify Priority Actions</h3><p>Get recommendations tied to indicators.</p></li>
-      <li><span class="n">6</span><h3>Export Report</h3><p>Download a Community Climate Report.</p></li>
+  <div class="container-xl text-center">
+    <h2 class="section-title text-center">The 4-Stage Adaptation Planning Workflow</h2>
+    <p class="lead-cr mx-auto mb-2" style="max-width: 650px;">A systematic evidence-based journey from multi-hazard satellite observation to on-ground resilience implementation.</p>
+    <ol class="flow text-start">
+      <li><span class="n">1</span>
+        <h3>Risk Profile</h3>
+        <p>Multi-hazard geospatial assessment across district and subdistrict administrative units.</p>
+      </li>
+      <li><span class="n">2</span>
+        <h3>Intervention Discovery</h3>
+        <p>Contextual filtering of CPWD/NDMA-benchmarked nature-based and structural solutions.</p>
+      </li>
+      <li><span class="n">3</span>
+        <h3>Decision Planner</h3>
+        <p>Comprehensive cost in INR, cooling/runoff impact metrics, and downloadable project dossiers.</p>
+      </li>
+      <li><span class="n">4</span>
+        <h3>Monitoring & Tracking</h3>
+        <p>Satellite observation framework ready for tracking baseline changes and resilience gains.</p>
+      </li>
     </ol>
   </div>
 </section>
@@ -67,9 +111,20 @@
   <div class="container-xl">
     <h2 class="section-title">More Than a Risk Map</h2>
     <div class="row g-4 mt-1">
-      <div class="col-md-4 feat"><h3>Interactive GIS</h3><p>Explore, zoom, pan, compare and inspect climate-risk patterns through an interactive map.</p></div>
-      <div class="col-md-4 feat"><h3>Explainable Assessment</h3><p>Understand the indicators associated with different vulnerability patterns rather than viewing risk as a black box.</p></div>
-      <div class="col-md-4 feat"><h3>Location-Specific Action</h3><p>Connect priority areas with practical recommendations linked to the indicators contributing to vulnerability.</p></div>
+      <div class="col-md-4 feat">
+        <h3>Interactive GIS</h3>
+        <p>Explore, zoom, pan, compare and inspect climate-risk patterns through an interactive map.</p>
+      </div>
+      <div class="col-md-4 feat">
+        <h3>Explainable Assessment</h3>
+        <p>Understand the indicators associated with different vulnerability patterns rather than viewing risk as a
+          black box.</p>
+      </div>
+      <div class="col-md-4 feat">
+        <h3>Location-Specific Action</h3>
+        <p>Connect priority areas with practical recommendations linked to the indicators contributing to vulnerability.
+        </p>
+      </div>
     </div>
   </div>
 </section>
@@ -78,9 +133,18 @@
   <div class="container-xl">
     <h2 id="wwnTitle" class="visually-hidden">From "Where?" to "Why?" to "What Next?"</h2>
     <div class="row g-4 g-lg-5">
-      <div class="col-md-4"><div class="wwn-q">Where?</div><p>Where is risk concentrated?</p></div>
-      <div class="col-md-4"><div class="wwn-q">Why?</div><p>Which indicators contribute to the risk?</p></div>
-      <div class="col-md-4"><div class="wwn-q">What next?</div><p>What actions can be considered in those areas?</p></div>
+      <div class="col-md-4">
+        <div class="wwn-q">Where?</div>
+        <p>Where is risk concentrated?</p>
+      </div>
+      <div class="col-md-4">
+        <div class="wwn-q">Why?</div>
+        <p>Which indicators contribute to the risk?</p>
+      </div>
+      <div class="col-md-4">
+        <div class="wwn-q">What next?</div>
+        <p>What actions can be considered in those areas?</p>
+      </div>
     </div>
   </div>
 </section>
@@ -88,18 +152,25 @@
 <section class="section">
   <div class="container-xl">
     <div class="row align-items-center g-4">
-      <div class="col-lg-7"><h2 class="section-title mb-3">Built on a Transparent Framework</h2>
-        <p class="lead-cr mb-0">ClimateReady combines environmental and socio-economic indicators through a structured spatial assessment framework to identify local patterns of climate vulnerability and risk.</p></div>
-      <div class="col-lg-5 text-lg-end"><a class="btn btn-outline-primary btn-lg" href="{{ url_for('methodology') }}">Explore & Learn →</a></div>
+      <div class="col-lg-7">
+        <h2 class="section-title mb-3">Built on a Transparent Framework</h2>
+        <p class="lead-cr mb-0">ClimateReady combines environmental and socio-economic indicators through a structured
+          spatial assessment framework to identify local patterns of climate vulnerability and risk.</p>
+      </div>
+      <div class="col-lg-5 text-lg-end"><a class="btn btn-outline-primary btn-lg"
+          href="{{ url_for('methodology') }}">Explore & Learn →</a></div>
     </div>
   </div>
 </section>
 
 <section class="final-cta">
   <div class="container-xl text-center">
-    <h2>Ready to explore local climate risk?</h2>
-    <p>Select an area and begin exploring its climate-risk profile.</p>
-    <a class="btn btn-primary btn-lg" href="{{ url_for('analysis') }}">Start Assessment</a>
+    <h2>Ready to build urban climate resilience?</h2>
+    <p>Configure a targeted multi-hazard assessment and intervention plan for your district.</p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+      <a class="btn btn-primary btn-lg px-4" href="{{ url_for('assessment') }}">Start Assessment →</a>
+      <a class="btn btn-outline-primary btn-lg px-4" href="{{ url_for('methodology') }}">Learn Methodology</a>
+    </div>
   </div>
 </section>
 {% endblock %}

@@ -181,3 +181,18 @@ def build_aoi(geom):
         "geom": simple, "geojson": mapping(simple), "area_km2": float(area_km2),
         "centroid": {"lat": c.y, "lng": c.x}, "bounds": [minx, miny, maxx, maxy],
     }
+
+
+_DEFAULT_STORE = None
+
+
+def get_default_location_store():
+    global _DEFAULT_STORE
+    if _DEFAULT_STORE is None:
+        _DEFAULT_STORE = LocationStore()
+    return _DEFAULT_STORE
+
+
+def place_name_at(lon, lat):
+    """Module-level reverse geocoding lookup for coordinates."""
+    return get_default_location_store().place_name_at(lon, lat)

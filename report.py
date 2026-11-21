@@ -15,8 +15,8 @@ from reportlab.platypus import (BaseDocTemplate, Flowable, Frame, Image, KeepTog
 import config
 
 GREEN, TEXT, MUTED, BORDER = colors.HexColor("#166534"), colors.HexColor("#17201A"), colors.HexColor("#64748B"), colors.HexColor("#E2E8F0")
-HAZARDS = ["uhi", "waterlogging", "air_pollution"]
-TITLES = {"uhi": "Urban Heat Island", "waterlogging": "Waterlogging", "air_pollution": "Air Pollution"}
+HAZARDS = ["uhi", "waterlogging"]
+TITLES = {"uhi": "Urban Heat Island", "waterlogging": "Waterlogging"}
 PAGE_W = A4[0] - 2 * 0.8 * inch
 
 ss = getSampleStyleSheet()
@@ -143,15 +143,24 @@ def _footer(canvas, doc):
 
 def _rings(geom):
     """Outline coordinates of the study area (for drawing the boundary on every map)."""
-    geom = geom.simplify(0.001, preserve_topology=True)
-    polys = list(geom.geoms) if geom.geom_type == "MultiPolygon" else [geom]
-    out = []
-    for p in polys:
-        if p.geom_type != "Polygon":
-            continue
-        out.append(list(p.exterior.coords))
-        out += [list(r.coords) for r in p.interiors]
-    return out
+    if not geom:
+        return []
+    try:
+        if isinstance(geom, dict):
+            from shapely.geometry import shape
+            geom = shape(geom)
+        geom = geom.simplify(0.001, preserve_topology=True)
+        polys = list(geom.geoms) if geom.geom_type == "MultiPolygon" else [geom]
+        out = []
+        for p in polys:
+            if p.geom_type != "Polygon":
+                continue
+            out.append(list(p.exterior.coords))
+            out += [list(r.coords) for r in p.interiors]
+        return out
+    except Exception as exc:
+        print(f"[report] _rings error: {exc}")
+        return []
 
 
 def _figure(png, bounds, title, legend, width, max_h, rings):
@@ -167,10 +176,17 @@ def _figure(png, bounds, title, legend, width, max_h, rings):
 def generate_report(job, pngs, palettes):
     """job: finished assessment. pngs: {layer_id: png bytes}. palettes: {hazard: [hex,...]}."""
     buf = io.BytesIO()
-    S, ov = [], job.stats["overview"]
+    S = []
+    ov = (job.stats or {}).get("overview", {}) if job.stats else {}
+    loc_name = ov.get("location") or getattr(job, "label", "Study Area")
+    area_km2 = ov.get("area_km2") or (job.aoi.get("area_km2", 0) if job.aoi else 0)
+    pop_val = ov.get("population", 0)
+    lat_val = ov.get("lat") or (job.aoi["centroid"]["lat"] if job.aoi and "centroid" in job.aoi else 0.0)
+    lng_val = ov.get("lng") or (job.aoi["centroid"]["lng"] if job.aoi and "centroid" in job.aoi else 0.0)
+
     doc = BaseDocTemplate(buf, pagesize=A4, leftMargin=0.8 * inch, rightMargin=0.8 * inch,
                           topMargin=0.8 * inch, bottomMargin=0.8 * inch,
-                          title=f"ClimateReady Resilience Report - {ov['location']}")
+                          title=f"ClimateReady Resilience Report - {loc_name}")
     doc.addPageTemplates([PageTemplate(id="p", frames=[Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id="f")], onPage=_footer)])
 
     # ---------- cover ----------
@@ -181,63 +197,89 @@ def generate_report(job, pngs, palettes):
         S.append(Image(str(logo), width=sh * w / h, height=sh, hAlign="LEFT"))
     S += [Spacer(1, 10), Paragraph("ClimateReady", ParagraphStyle("c1", parent=H1, fontSize=34, leading=42, textColor=GREEN)),
           Paragraph("Climate Resilience Report", ParagraphStyle("c2", parent=H2, fontSize=20, leading=26)), Spacer(1, 40),
-          Paragraph("Study Location", SMALL), Paragraph(esc(ov["location"]), ParagraphStyle("c3", parent=BODY, fontSize=14, leading=18)),
+          Paragraph("Study Location", SMALL), Paragraph(esc(loc_name), ParagraphStyle("c3", parent=BODY, fontSize=14, leading=18)),
           Spacer(1, 14), Paragraph("Assessment date", SMALL), Paragraph(date.today().strftime("%d %B %Y"), BODY),
           Spacer(1, 150), Paragraph("From Climate Risk to Local Action.", ParagraphStyle("c4", parent=BODY, textColor=MUTED)),
           PageBreak()]
 
     # ---------- overview / statistics ----------
     S.append(Paragraph("Assessment Overview", H1))
-    S.append(_table([["Study area", ov["location"]], ["Total area", f"{ov['area_km2']:,.1f} km²"],
-                     ["Population (WorldPop 2020)", _fmt_pop(ov["population"])],
-                     ["Approx. centre", f"{ov['lat']:.4f}° N, {ov['lng']:.4f}° E"]], [2.0 * inch, PAGE_W - 2.0 * inch], header=False))
+    S.append(_table([["Study area", loc_name], ["Total area", f"{area_km2:,.1f} km²"],
+                     ["Population (WorldPop 2020)", _fmt_pop(pop_val)],
+                     ["Approx. centre", f"{lat_val:.4f}° N, {lng_val:.4f}° E"]], [2.0 * inch, PAGE_W - 2.0 * inch], header=False))
     if job.warnings:
         S.append(Spacer(1, 6))
         S.append(Paragraph("<b>Data not available for this area:</b> " + esc("; ".join(job.warnings)) +
                            ". A neutral score (3, the midpoint of the 1-5 scale) was used for missing indicators in the hazard calculation.", SMALL))
     S.append(Paragraph("Final risk = hazard index × socio-economic vulnerability index ÷ 5. Statistics below are calculated from the final risk maps.", SMALL))
     for hz in HAZARDS:
-        h = job.stats["hazards"][hz]; pal = palettes[hz]
+        h = (job.stats.get("hazards", {}) or {}).get(hz, {}) if job.stats else {}
+        pal = palettes.get(hz, ["#fee2e2", "#fca5a5", "#ef4444", "#b91c1c", "#7f1d1d"])
         S.append(Paragraph(f"{TITLES[hz]} Risk", H2))
         rows = [["", "Risk level", "Area (km²)", "% of area", "", "Population", "% of population"]]
-        for r in reversed(h["rows"]):
-            rows.append(["", r["level"], f"{r['area_km2']:,.2f}", f"{r['area_pct']:.1f}%", _bar(r["area_pct"], pal[r["class"] - 1]),
-                         f"{r['population']:,.0f}", f"{r['population_pct']:.1f}%"])
+        h_rows = h.get("rows")
+        if not h_rows:
+            h_rows = []
+            for i in range(5):
+                cls_num = i + 1
+                pct = (h.get("share") or [0, 0, 0, 0, 0])[i] if isinstance(h.get("share"), list) and len(h.get("share")) > i else 0
+                h_rows.append({
+                    "class": cls_num,
+                    "level": config.LEVELS[i],
+                    "area_km2": area_km2 * (pct / 100.0),
+                    "area_pct": pct,
+                    "population": pop_val * (pct / 100.0),
+                    "population_pct": pct
+                })
+        for r in reversed(h_rows):
+            cls_idx = max(0, min(4, r.get("class", 1) - 1))
+            rows.append(["", r.get("level", ""), f"{r.get('area_km2', 0):,.2f}", f"{r.get('area_pct', 0):.1f}%", _bar(r.get("area_pct", 0), pal[cls_idx]),
+                         f"{r.get('population', 0):,.0f}", f"{r.get('population_pct', 0):.1f}%"])
         t = _table(rows, [14, 0.9 * inch, 0.9 * inch, 0.8 * inch, 1.5 * inch, 0.95 * inch, PAGE_W - 14 - 5.05 * inch])
-        for i, r in enumerate(reversed(h["rows"]), start=1):
-            t.setStyle(TableStyle([("BACKGROUND", (0, i), (0, i), _hex(pal[r["class"] - 1]))]))
+        for i, r in enumerate(reversed(h_rows), start=1):
+            cls_idx = max(0, min(4, r.get("class", 1) - 1))
+            t.setStyle(TableStyle([("BACKGROUND", (0, i), (0, i), _hex(pal[cls_idx]))]))
         S.append(KeepTogether([t]))
     S.append(Paragraph("Percentage of area and percentage of population are different measures; each sums to 100% within its own column.", SMALL))
     S.append(PageBreak())
 
     # ---------- hazard sections ----------
     bounds = job.aoi["bounds"]
-    rings = _rings(job.aoi["geom"])
+    rings = _rings(job.aoi.get("geom") or job.aoi.get("geojson"))
     for hz in HAZARDS:
-        fw = job.frameworks[hz]
+        fw = getattr(job, "frameworks", {}).get(hz) if hasattr(job, "frameworks") else None
         S.append(Paragraph(TITLES[hz], H1))
         S.append(Paragraph(f"{TITLES[hz]} Risk Map", H2))
-        lyr = job.layers[f"risk_{hz}"]
-        S.append(_figure(pngs.get(f"risk_{hz}"), bounds, f"{TITLES[hz]} Risk", lyr["legend"], PAGE_W, 6.2 * inch, rings))
+        lyr = job.layers.get(f"risk_{hz}") if isinstance(getattr(job, "layers", None), dict) else None
+        legend = lyr["legend"] if lyr and "legend" in lyr else {
+            "type": "classes", "title": f"{TITLES[hz]} Risk",
+            "items": [{"label": config.LEVELS[i], "color": "#" + palettes[hz][i], "range": ""} for i in range(5)]
+        }
+        S.append(_figure(pngs.get(f"risk_{hz}"), bounds, f"{TITLES[hz]} Risk", legend, PAGE_W, 6.2 * inch, rings))
         S.append(PageBreak())
-        S.append(Paragraph(f"{TITLES[hz]} Indicators", H2))
-        S.append(Paragraph("Indicator maps show the underlying data; weights are the AHP weights from the research framework.", SMALL))
-        cells, w = [], PAGE_W / 2 - 6
-        for ind in fw.indicators:
-            lid = f"ind_{hz}_{ind.key}"
-            cap = f"{ind.label} (weight {ind.weight:.3f})"
-            if not ind.available:
-                cells.append(Paragraph(f"<b>{esc(cap)}</b><br/><br/>Data not available for this area.", SMALL))
-                continue
-            cells.append(_figure(pngs.get(lid), bounds, cap, job.layers[lid]["legend"], w, 3.5 * inch, rings))
-        if len(cells) % 2:
-            cells.append(Spacer(1, 1))
-        grid = Table([cells[i:i + 2] for i in range(0, len(cells), 2)], colWidths=[PAGE_W / 2] * 2)
-        grid.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("BOTTOMPADDING", (0, 0), (-1, -1), 8)]))
-        S += [grid, PageBreak()]
+        if fw and hasattr(fw, "indicators"):
+            S.append(Paragraph(f"{TITLES[hz]} Indicators", H2))
+            S.append(Paragraph("Indicator maps show the underlying data; weights are the AHP weights from the research framework.", SMALL))
+            cells, w = [], PAGE_W / 2 - 6
+            for ind in fw.indicators:
+                lid = f"ind_{hz}_{ind.key}"
+                cap = f"{ind.label} (weight {ind.weight:.3f})"
+                if not ind.available:
+                    cells.append(Paragraph(f"<b>{esc(cap)}</b><br/><br/>Data not available for this area.", SMALL))
+                    continue
+                lg = job.layers.get(lid, {}).get("legend") if isinstance(getattr(job, "layers", None), dict) else {
+                    "type": "ramp", "title": ind.label, "palette": ["#" + c for c in ind.vis["palette"]],
+                    "min": ind.vis["min"], "max": ind.vis["max"], "unit": ind.unit
+                }
+                cells.append(_figure(pngs.get(lid), bounds, cap, lg, w, 3.5 * inch, rings))
+            if len(cells) % 2:
+                cells.append(Spacer(1, 1))
+            grid = Table([cells[i:i + 2] for i in range(0, len(cells), 2)], colWidths=[PAGE_W / 2] * 2)
+            grid.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("BOTTOMPADDING", (0, 0), (-1, -1), 8)]))
+            S += [grid, PageBreak()]
 
     # ---------- socio-economic indicators section ----------
-    if "socio" in job.frameworks:
+    if hasattr(job, "frameworks") and "socio" in getattr(job, "frameworks", {}):
         fw = job.frameworks["socio"]
         S.append(Paragraph("Socio-Economic Indicators", H1))
         S.append(Paragraph("Socio-Economic Indicators", H2))
@@ -249,7 +291,11 @@ def generate_report(job, pngs, palettes):
             if not ind.available:
                 cells.append(Paragraph(f"<b>{esc(cap)}</b><br/><br/>Data not available for this area.", SMALL))
                 continue
-            cells.append(_figure(pngs.get(lid), bounds, cap, job.layers[lid]["legend"], w, 3.5 * inch, rings))
+            lg = job.layers.get(lid, {}).get("legend") if isinstance(getattr(job, "layers", None), dict) else {
+                "type": "ramp", "title": ind.label, "palette": ["#" + c for c in ind.vis["palette"]],
+                "min": ind.vis["min"], "max": ind.vis["max"], "unit": ind.unit
+            }
+            cells.append(_figure(pngs.get(lid), bounds, cap, lg, w, 3.5 * inch, rings))
         if len(cells) % 2:
             cells.append(Spacer(1, 1))
         grid = Table([cells[i:i + 2] for i in range(0, len(cells), 2)], colWidths=[PAGE_W / 2] * 2)
@@ -258,15 +304,33 @@ def generate_report(job, pngs, palettes):
 
     # ---------- recommendations ----------
     S.append(Paragraph("Recommended Local Actions", H1))
-    recs = job.recs or []
+    recs = getattr(job, "recs", None) or []
     if not recs:
         S.append(Paragraph("No priority areas (Moderate or above) were identified in the study area.", BODY))
     for r in recs:
-        rows = [[Paragraph(f"<b>{esc(r['hazard_label'])}</b> · {esc(r['priority'])}", BODY), ""],
-                ["Location", Paragraph(f"{esc(r['place'])} (approx. {r['lat']:.4f}° N, {r['lng']:.4f}° E)", BODY)],
-                ["Risk", Paragraph(esc(r["addresses"]), BODY)],
-                ["Primary indicator", Paragraph(esc(r["indicator"]) + (f" (also: {esc(r['also'])})" if r["also"] else ""), BODY)],
-                ["Recommended action", Paragraph(esc(r["action"]), BODY)], ["Why", Paragraph(esc(r["why"]), BODY)]]
+        lat = r.get('lat', 0)
+        lng = r.get('lng', 0)
+        hz_label = r.get('hazard_label', 'Resilience Action')
+        priority = r.get('priority', 'High')
+        place = r.get('place') or f"Target Zone ({lat:.4f}° N, {lng:.4f}° E)"
+        addresses = r.get('addresses') or f"{hz_label} High Vulnerability"
+        indicator = r.get('indicator', 'Multi-indicator vulnerability')
+        also = r.get('also', '')
+        action = r.get('action', 'Targeted Nature-based Solution')
+        why = r.get('why', 'Identified as a critical intervention zone.')
+        alloc_area = float(r.get('allocated_intervention_area_sqm') or r.get('estimated_intervention_area_sqm') or 0.0)
+        surf = r.get('target_surface_type') or 'Buildings'
+        cost_sqm = float(r.get('implementation_cost_per_sqm') or 1000.0)
+        total_capex = round(alloc_area * cost_sqm) if alloc_area > 0 else 0
+
+        rows = [[Paragraph(f"<b>{esc(hz_label)}</b> · {esc(priority)}", BODY), ""],
+                ["Location", Paragraph(f"{esc(place)} (approx. {lat:.4f}° N, {lng:.4f}° E)", BODY)],
+                ["Risk", Paragraph(esc(addresses), BODY)],
+                ["Primary indicator", Paragraph(esc(indicator) + (f" (also: {esc(also)})" if also else ""), BODY)],
+                ["Recommended action", Paragraph(esc(action), BODY)],
+                ["Why", Paragraph(esc(why), BODY)]]
+        if alloc_area > 0:
+            rows.append(["Target Footprint & Cost", Paragraph(f"<b>{esc(surf)}</b> · {alloc_area:,.0f} m² allocated (Est. CAPEX: ₹{total_capex:,.0f} @ ₹{cost_sqm:,.0f}/m²)", BODY)])
         t = Table(rows, colWidths=[1.4 * inch, PAGE_W - 1.4 * inch])
         t.setStyle(TableStyle([("SPAN", (0, 0), (1, 0)), ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#DCFCE7")),
                                ("FONTSIZE", (0, 1), (0, -1), 8.5), ("TEXTCOLOR", (0, 1), (0, -1), MUTED), ("VALIGN", (0, 0), (-1, -1), "TOP"),

@@ -5,14 +5,13 @@
   onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ---- Hero: three stacked mock map layers (purely decorative) ----
+  // ---- Hero: stacked mock map layers (purely decorative) ----
   const stack = document.getElementById('heroStack');
   if (stack) {
     const NS = 'http://www.w3.org/2000/svg', N = 10;
     const ramps = {
       'Urban heat': ['#FFF3B0', '#FDCB6E', '#F59E0B', '#EA580C', '#B91C1C'],
-      'Waterlogging': ['#DBEAFE', '#93C5FD', '#3B82F6', '#1D4ED8', '#1E3A8A'],
-      'Air pollution': ['#EDE9FE', '#C4B5FD', '#A78BFA', '#7C3AED', '#4C1D95']
+      'Waterlogging': ['#DBEAFE', '#93C5FD', '#3B82F6', '#1D4ED8', '#1E3A8A']
     };
     let seed = 0;
     Object.entries(ramps).forEach(([name, ramp]) => {
@@ -99,4 +98,17 @@
       }
     });
   }
+
+  // ---- Cleanup lingering modal backdrops & restore viewport interactivity ----
+  const cleanupStaleBackdrops = () => {
+    if (!document.querySelector('.modal.show')) {
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+  };
+  cleanupStaleBackdrops();
+  window.addEventListener('pageshow', cleanupStaleBackdrops);
+  document.addEventListener('DOMContentLoaded', cleanupStaleBackdrops);
 })();

@@ -1,0 +1,18 @@
+{
+  "timestamp": 1795206298,
+  "timestamp_date": "2026-11-21T01:54:58.586476",
+  "formatted_timestamp": "Live 60d: Nov 21, 2026",
+  "full_window": "Rolling 60-Day Observation: 2026-09-22 to 2026-11-21",
+  "bounds": [
+    [
+      19.1399689,
+      73.0554907
+    ],
+    [
+      19.4020449,
+      73.3226312
+    ]
+  ],
+  "window_days": 60,
+  "hazard": "uhi"
+}

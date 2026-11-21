@@ -1,15 +1,15 @@
 """Area and population statistics, calculated from the FINAL risk class maps (master script section 13).
 
-Speed: all three hazards, area and population are computed in ONE Earth Engine reduction. Each pixel gets a
-combined code (UHI class, waterlogging class, air class); the per-hazard totals are summed from it in Python.
+Speed: all hazards, area and population are computed in ONE Earth Engine reduction. Each pixel gets a
+combined code (UHI class, waterlogging class); the per-hazard totals are summed from it in Python.
 The numbers are identical to computing each hazard separately, but Earth Engine evaluates the heavy
-risk calculation once instead of six times."""
+risk calculation once instead of multiple times."""
 import ee
 import config
 
 
 def compute_statistics(aoi, risk_classes, population, crs):
-    """risk_classes: {'uhi': ee.Image, 'waterlogging': ..., 'air_pollution': ...}."""
+    """risk_classes: {'uhi': ee.Image, 'waterlogging': ...}."""
     keys = list(risk_classes)
     code = None
     for k in keys:                                  # base-5 code, first hazard most significant

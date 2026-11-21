@@ -1,9 +1,6 @@
-"""Priority areas (Earth Engine) and recommendation building (plain Python lookup)."""
+"""Spatial priority areas (Earth Engine) hotspot identification."""
 import ee
 import config
-from .recommendation_library import RECOMMENDATIONS, HAZARD_LABELS, ADDRESSES
-
-PICK = 0   # which library entry to use when an indicator has several
 
 
 def level_from_index(value):
@@ -55,23 +52,3 @@ def find_priority_areas(fw, risk_index, risk_class, area_rows, aoi, crs):
                     "indicators": [{"key": k, "label": labels[k], "contribution": v} for k, v in contribs[:2]]})
     out.sort(key=lambda z: (z["risk"], z["area_km2"]), reverse=True)
     return out[:config.MAX_PINS_PER_HAZARD]
-
-
-def build_recommendations(priority, place_lookup):
-    """priority: {hazard: [zone,...]} -> flat list of recommendation dicts (library lookup only)."""
-    recs, n = [], 0
-    for hazard in ("uhi", "waterlogging", "air_pollution"):
-        for z in priority.get(hazard, []):
-            ind = z["indicators"][0]["key"]
-            entry = RECOMMENDATIONS[hazard][ind][PICK]
-            n += 1
-            also = z["indicators"][1]["label"] if len(z["indicators"]) > 1 else ""
-            recs.append({
-                "id": n, "n": n, "hazard": hazard, "hazard_label": HAZARD_LABELS[hazard],
-                "level": z["level"], "priority": f"{z['level'].upper()} PRIORITY",
-                "place": place_lookup(z["lng"], z["lat"]) or "Selected area",
-                "lat": z["lat"], "lng": z["lng"], "area_km2": z["area_km2"],
-                "indicator": z["indicators"][0]["label"], "indicator_key": ind, "also": also,
-                "action": entry["action"], "why": entry["why"], "addresses": ADDRESSES[hazard],
-            })
-    return recs

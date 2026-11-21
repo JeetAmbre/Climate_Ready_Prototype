@@ -72,7 +72,7 @@ selection -> Flask -> local shapefile -> AOI -> Earth Engine
 | File | Purpose |
 |---|---|
 | `config.py` | all settings (limits, queue size, class breaks, dates) |
-| `gee/uhi.py`, `waterlogging.py`, `air_pollution.py`, `socioeconomic.py` | the four research frameworks (ported from `ClimateReady_Master_GEE_FINAL.js`) |
+| `gee/uhi.py`, `waterlogging.py`, `socioeconomic.py` | the research frameworks (ported from `ClimateReady_Master_GEE_FINAL.js`) |
 | `gee/common.py` | shared Sentinel-2/Landsat inputs, normalisation, classification, palettes |
 | `gee/pipeline.py` | combines hazards with socio-economic vulnerability, builds layers |
 | `gee/statistics.py` | area / population per final risk class |
